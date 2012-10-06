@@ -257,20 +257,23 @@ int __init usbotg_init(void)
 
 #if defined(CONFIG_MACH_EA313X) || defined(CONFIG_MACH_EA3152)
 		/* set thw I2SRX_WS0 pin as GPIO_IN for vbus overcurrent flag */
+/*  --hh
 		gpio_direction_input(GPIO_I2SRX_WS0);
 		lpc313x_usb_brd.vbus_ovrc_irq = IRQ_EA_VBUS_OVRC;
-
+*/
 #else
 		lpc313x_usb_brd.vbus_ovrc_irq = IRQ_VBUS_OVRC;
 #endif
 
 		/* request IRQ to handle VBUS power event */
+/* --hh
 		retval = request_irq( lpc313x_usb_brd.vbus_ovrc_irq, lpc313x_vbus_ovrc_irq, 
 			IRQF_DISABLED, "VBUSOVR", 
 			&lpc313x_usb_brd);
 
 		if ( 0 != retval )
 			printk(KERN_INFO "Unable to register IRQ_VBUS_OVRC handler\n");
+*/
 		
 #else
 		printk(KERN_ERR "Unable to register USB host. Check USB_ID jumper!!!!!\n");
