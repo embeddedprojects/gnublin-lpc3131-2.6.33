@@ -217,6 +217,7 @@ int __init lpc313x_init(void)
 	/* AUDIO CODEC CLOCK (256FS) */
 	GPIO_DRV_IP(IOCONF_I2STX_1, 0x8);
 
+  lpc313x_gpiolib_init();
 	return platform_add_devices(devices, ARRAY_SIZE(devices));
 }
 
