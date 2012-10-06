@@ -15,6 +15,52 @@
 const char hex_asc[] = "0123456789abcdef";
 EXPORT_SYMBOL(hex_asc);
 
+
+
+
+
+/**
+ * hex_to_bin - convert a hex digit to its real value
+ * @ch: ascii character represents hex digit
+ *
+ * hex_to_bin() converts one hex digit to its actual value or -1 in case of bad
+ * input.
+ */
+int hex_to_bin(char ch)
+{
+        if ((ch >= '0') && (ch <= '9'))
+                return ch - '0';
+        ch = tolower(ch);
+        if ((ch >= 'a') && (ch <= 'f'))
+                return ch - 'a' + 10;
+        return -1;
+}
+EXPORT_SYMBOL(hex_to_bin);
+
+/**
+ * hex2bin - convert an ascii hexadecimal string to its binary representation
+ * @dst: binary result
+ * @src: ascii hexadecimal string
+ * @count: result length
+ *
+ * Return 0 on success, -1 in case of bad input.
+ */
+int hex2bin(u8 *dst, const char *src, size_t count)
+{
+        while (count--) {
+                int hi = hex_to_bin(*src++);
+                int lo = hex_to_bin(*src++);
+
+                if ((hi < 0) || (lo < 0))
+                        return -1;
+
+                *dst++ = (hi << 4) | lo;
+        }
+        return 0;
+}
+EXPORT_SYMBOL(hex2bin);
+
+
 /**
  * hex_dump_to_buffer - convert a blob of data to "hex ASCII" in memory
  * @buf: data blob to dump
