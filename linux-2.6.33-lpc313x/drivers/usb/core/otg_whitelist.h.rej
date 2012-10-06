@@ -1,0 +1,44 @@
+--- drivers/usb/core/otg_whitelist.h
++++ drivers/usb/core/otg_whitelist.h
+@@ -21,6 +21,7 @@
+ /* hubs are optional in OTG, but very handy ... */
+ { USB_DEVICE_INFO(USB_CLASS_HUB, 0, 0), },
+ { USB_DEVICE_INFO(USB_CLASS_HUB, 0, 1), },
++{ USB_DEVICE_INFO(USB_CLASS_HUB, 0, 2), },
+ 
+ #ifdef	CONFIG_USB_PRINTER		/* ignoring nonstatic linkage! */
+ /* FIXME actually, printers are NOT supposed to use device classes;
+@@ -42,7 +43,6 @@
+ /* gadget zero, for testing */
+ { USB_DEVICE(0x0525, 0xa4a0), },
+ #endif
+-
+ { }	/* Terminating entry */
+ };
+ 
+@@ -50,14 +50,22 @@
+ {
+ 	struct usb_device_id	*id = whitelist_table;
+ 
+-	/* possible in developer configs only! */
++#if defined(CONFIG_USB_OTG)
++  /* possible in developer configs only! */
+ 	if (!dev->bus->otg_port)
+ 		return 1;
+-
+-	/* HNP test device is _never_ targeted (see OTG spec 6.6.6) */
++	
++  /* HNP test device is _never_ targeted (see OTG spec 6.6.6) */
+ 	if ((le16_to_cpu(dev->descriptor.idVendor) == 0x1a0a &&
+ 	     le16_to_cpu(dev->descriptor.idProduct) == 0xbadd))
+ 		return 0;
++#endif
++
++#if defined(CONFIG_USB_EHCI_EHSET)
++	if ((le16_to_cpu(dev->descriptor.idVendor) == 0x1a0a))
++		return 1;
++
++#endif
+ 
+ 	/* NOTE: can't use usb_match_id() since interface caches
+ 	 * aren't set up yet. this is cut/paste from that code.

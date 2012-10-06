@@ -1,0 +1,11 @@
+--- drivers/usb/core/Kconfig
++++ drivers/usb/core/Kconfig
+@@ -107,7 +107,7 @@
+ 	  If you are unsure about this, say N here.
+ 
+ config USB_OTG
+-	bool
++	bool "OTG Support"
+ 	depends on USB && EXPERIMENTAL
+ 	select USB_SUSPEND
+ 	default n

@@ -51,7 +51,7 @@ static struct lpc313x_mci_irq_data irq_data = {
 
 static int mci_get_cd(u32 slot_id)
 {
-	return gpio_get_value(GPIO_MI2STX_BCK0);
+	return gpio_get_value(GPIO_MNAND_RYBN2);
 }
 
 static irqreturn_t ea313x_mci_detect_interrupt(int irq, void *data)
@@ -74,8 +74,9 @@ static int mci_init(u32 slot_id, irq_handler_t irqhdlr, void *data)
 
 	/* enable power to the slot */
 	gpio_set_value(GPIO_MI2STX_DATA0, 0);
+
 	/* set cd pins as GPIO pins */
-	gpio_direction_input(GPIO_MI2STX_BCK0);
+	gpio_direction_input(GPIO_MNAND_RYBN2);
 
 	/* select the opposite level senstivity */
 	level = mci_get_cd(0)?IRQ_TYPE_LEVEL_LOW:IRQ_TYPE_LEVEL_HIGH;

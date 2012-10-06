@@ -1,0 +1,78 @@
+--- drivers/net/cs89x0.c
++++ drivers/net/cs89x0.c
+@@ -186,6 +186,13 @@
+ #define CIRRUS_DEFAULT_IRQ	VH_INTC_INT_NUM_CASCADED_INTERRUPT_1 /* Event inputs bank 1 - ID 35/bit 3 */
+ static unsigned int netcard_portlist[] __used __initdata = {CIRRUS_DEFAULT_BASE, 0};
+ static unsigned int cs8900_irq_map[] = {CIRRUS_DEFAULT_IRQ, 0, 0, 0};
++#elif defined(CONFIG_MACH_VAL3153)
++#include <asm/irq.h>
++#include <mach/hardware.h>
++#define CS8900_IOBARRIER	(*(volatile u16 __force*) io_p2v(INTC_PHYS))
++#define CIRRUS_DEFAULT_BASE	io_p2v(EXT_SRAM1_PHYS + 0x10000)	/* = Physical address 0x20030000 */
++static unsigned int netcard_portlist[] __used __initdata = {CIRRUS_DEFAULT_BASE, 0};
++static unsigned int cs8900_irq_map[] = {IRQ_CS8900_ETH_INT, 0, 0, 0};
+ #elif defined(CONFIG_MACH_MX31ADS)
+ #include <mach/board-mx31ads.h>
+ static unsigned int netcard_portlist[] __used __initdata = {
+@@ -325,6 +332,12 @@
+ 	if (net_debug)
+ 		printk("cs89x0:cs89x0_probe(0x%x)\n", io);
+ 
++#ifdef CONFIG_MACH_VAL3153
++	if(unit > 0) {
++		err = -ENODEV;
++		goto out;
++	}
++#endif
+ 	if (io > 0x1ff)	{	/* Check a single specified location. */
+ 		err = cs89x0_probe1(dev, io, 0);
+ 	} else if (io != 0) {	/* Don't probe at all. */
+@@ -384,6 +397,24 @@
+ {
+ 	outw(value, base_addr + (portno << 1));
+ }
++#elif defined(CONFIG_MACH_VAL3153)
++static u16
++readword(unsigned long base_addr, int portno)
++{
++	u16 v;
++	CS8900_IOBARRIER;
++	v = inw(base_addr + portno);
++	CS8900_IOBARRIER;
++	return v;
++}
++
++static void
++writeword(unsigned long base_addr, int portno, u16 value)
++{
++	CS8900_IOBARRIER;
++	outw(value, base_addr + portno);
++	CS8900_IOBARRIER;
++}
+ #else
+ static u16
+ readword(unsigned long base_addr, int portno)
+@@ -579,7 +610,7 @@
+ 		goto out1;
+ 	}
+ 
+-#ifdef CONFIG_SH_HICOSH4
++#if defined(CONFIG_SH_HICOSH4) || defined(CONFIG_MACH_VAL3153)
+ 	/* truely reset the chip */
+ 	writeword(ioaddr, ADD_PORT, 0x0114);
+ 	writeword(ioaddr, DATA_PORT, 0x0040);
+@@ -681,9 +712,12 @@
+ 		}
+ 	} else
+ #endif
+-
++/* quick hack for VAL3153 boards to reuse the mac address set by boot loader */
++#if !defined(CONFIG_MACH_VAL3153)
+         if ((readreg(dev, PP_SelfST) & (EEPROM_OK | EEPROM_PRESENT)) ==
+-	      (EEPROM_OK|EEPROM_PRESENT)) {
++	      (EEPROM_OK|EEPROM_PRESENT)) 
++#endif
++	{
+ 	        /* Load the MAC. */
+ 		for (i=0; i < ETH_ALEN/2; i++) {
+ 	                unsigned int Addr;

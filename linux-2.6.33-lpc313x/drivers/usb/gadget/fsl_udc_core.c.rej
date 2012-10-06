@@ -1,0 +1,130 @@
+--- drivers/usb/gadget/fsl_udc_core.c
++++ drivers/usb/gadget/fsl_udc_core.c
+@@ -16,7 +16,9 @@
+  * option) any later version.
+  */
+ 
+-#undef VERBOSE
++//#define VERBOSE
++//#define VERBOSE_DEBUG
++//#define DEBUG
+ 
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+@@ -75,6 +77,8 @@
+ };
+ 
+ static void fsl_ep_fifo_flush(struct usb_ep *_ep);
++static int fsl_udc_suspend(struct platform_device *pdev, pm_message_t state);
++static int fsl_udc_resume(struct platform_device *pdev);
+ 
+ #ifdef CONFIG_PPC32
+ #define fsl_readl(addr)		in_le32(addr)
+@@ -295,6 +299,17 @@
+ {
+ 	unsigned int tmp;
+ 
++	/* if we're in OTG mode, and the Host is currently using the port,
++	 * stop now and don't rip the controller out from under the
++	 * ehci driver
++	 */
++	if (gadget_is_otg(&udc->gadget)) {
++		if (!(dr_regs->otgsc & OTGSC_STS_USB_ID)) {
++			VDBG("udc: Leaving early\n");
++			return;
++		}
++	}
++
+ 	/* disable all INTR */
+ 	fsl_writel(0, &dr_regs->usbintr);
+ 
+@@ -1800,11 +1815,29 @@
+ 		goto out;
+ 	}
+ 
+-	/* Enable DR IRQ reg and Set usbcmd reg  Run bit */
+-	dr_controller_run(udc_controller);
+-	udc_controller->usb_state = USB_STATE_ATTACHED;
+-	udc_controller->ep0_state = WAIT_FOR_SETUP;
+-	udc_controller->ep0_dir = 0;
++	if (udc_controller->transceiver) {
++		VDBG("udc: suspend udc for OTG auto detect \n");
++		udc_controller->stopped = 0;
++		/* Export udc suspend/resume call to OTG */
++		udc_controller->gadget.dev.parent->driver->suspend = fsl_udc_suspend;
++		udc_controller->gadget.dev.parent->driver->resume = fsl_udc_resume;
++
++		/* connect to bus through transceiver */
++		retval = otg_set_peripheral(udc_controller->transceiver, &udc_controller->gadget);
++		if (retval < 0) {
++			VDBG("udc: can't bind to transceiver\n");
++			driver->unbind(&udc_controller->gadget);
++			udc_controller->gadget.dev.driver = 0;
++			udc_controller->driver = 0;
++			return retval;
++		}
++	} else {
++		/* Enable DR IRQ reg and Set usbcmd reg  Run bit */
++		dr_controller_run(udc_controller);
++		udc_controller->usb_state = USB_STATE_ATTACHED;
++		udc_controller->ep0_state = WAIT_FOR_SETUP;
++		udc_controller->ep0_dir = 0;
++	}
+ 	printk(KERN_INFO "%s: bind to driver %s\n",
+ 			udc_controller->gadget.name, driver->driver.name);
+ 
+@@ -2265,14 +2298,14 @@
+ 		ret = -ENXIO;
+ 		goto err_kfree;
+ 	}
+-
++/*
+ 	if (!request_mem_region(res->start, res->end - res->start + 1,
+ 				driver_name)) {
+ 		ERR("request mem region for %s failed\n", pdev->name);
+ 		ret = -EBUSY;
+ 		goto err_kfree;
+ 	}
+-
++*/
+ 	dr_regs = ioremap(res->start, resource_size(res));
+ 	if (!dr_regs) {
+ 		ret = -ENOMEM;
+@@ -2300,6 +2333,11 @@
+ 	/* DEN is bidirectional ep number, max_ep doubles the number */
+ 	udc_controller->max_ep = (dccparams & DCCPARAMS_DEN_MASK) * 2;
+ 
++#ifdef CONFIG_USB_OTG
++	udc_controller->transceiver = otg_get_transceiver();
++	VDBG("udc: otg_get_transceiver returns 0x%p", udc_controller->transceiver);
++#endif
++
+ 	udc_controller->irq = platform_get_irq(pdev, 0);
+ 	if (!udc_controller->irq) {
+ 		ret = -ENODEV;
+@@ -2323,7 +2361,11 @@
+ 
+ 	/* initialize usb hw reg except for regs for EP,
+ 	 * leave usbintr reg untouched */
+-	dr_controller_setup(udc_controller);
++	if (!udc_controller->transceiver) {
++		dr_controller_setup(udc_controller);
++	} else {
++		udc_controller->gadget.is_otg = 1;
++	}
+ 
+ 	fsl_udc_clk_finalize(pdev);
+ 
+@@ -2407,6 +2449,12 @@
+ 
+ 	fsl_udc_clk_release();
+ 
++#ifdef CONFIG_USB_OTG
++	if (udc_controller->transceiver) {
++		otg_put_transceiver(udc_controller->transceiver);
++		udc_controller->transceiver = 0;
++	}
++#endif
+ 	/* DR has been stopped in usb_gadget_unregister_driver() */
+ 	remove_proc_file();
+ 

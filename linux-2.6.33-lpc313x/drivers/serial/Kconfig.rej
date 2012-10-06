@@ -1,0 +1,15 @@
+--- drivers/serial/Kconfig
++++ drivers/serial/Kconfig
+@@ -70,6 +70,12 @@
+ 
+ 	  If unsure, say N.
+ 
++config LPC31XX_SERIAL_DMA_SUPPORT
++	bool "DMA support for the LPC31XX RX/TX functions"
++	depends on SERIAL_8250=y
++	help
++	 Enables DMA support for the UART function
++
+ config FIX_EARLYCON_MEM
+ 	bool
+ 	depends on X86

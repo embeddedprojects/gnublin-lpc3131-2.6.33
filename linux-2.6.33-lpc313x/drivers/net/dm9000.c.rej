@@ -1,0 +1,10 @@
+--- drivers/net/dm9000.c
++++ drivers/net/dm9000.c
+@@ -872,6 +872,7 @@
+ 
+ 	/* Issue TX polling command */
+ 	iow(dm, DM9000_TCR, TCR_TXREQ);	/* Cleared after TX complete */
++	dev->trans_start = jiffies; /* save the time stamp */
+ }
+ 
+ /*

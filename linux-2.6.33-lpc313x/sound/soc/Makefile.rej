@@ -1,0 +1,7 @@
+--- sound/soc/Makefile
++++ sound/soc/Makefile
+@@ -14,3 +14,4 @@
+ obj-$(CONFIG_SND_SOC)	+= s6000/
+ obj-$(CONFIG_SND_SOC)	+= sh/
+ obj-$(CONFIG_SND_SOC)	+= txx9/
++obj-$(CONFIG_SND_SOC)	+= lpc313x/

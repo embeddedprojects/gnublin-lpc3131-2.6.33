@@ -143,9 +143,12 @@
 #define BOARD_IRQ_EVENT_MAP	{ \
 	CHIP_IRQ_EVENT_MAP \
 	{IRQ_DM9000_ETH_INT, EVT_mNAND_RYBN3, EVT_ACTIVE_HIGH}, \
-	{IRQ_SDMMC_CD, EVT_mI2STX_BCK0, EVT_ACTIVE_LOW}, \
+  {IRQ_SDMMC_CD, EVT_mNAND_RYBN2, EVT_ACTIVE_LOW}, \
 	{IRQ_EA_VBUS_OVRC, EVT_I2SRX_WS0, EVT_ACTIVE_LOW}, \
 	}
+  //{IRQ_SDMMC_CD, EVT_mI2STX_BCK0, EVT_ACTIVE_LOW}, --hh
+
+
 /* Following defines group the board IRQs into 4 IRQ_EVNTR groups.
    IRQ_EVT_ROUTERx IRQ is generated when event in the corresponding 
    group triggers.
