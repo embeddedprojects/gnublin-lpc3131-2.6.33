@@ -276,6 +276,14 @@
  * ADC_REG register definitions
  **********************************************************************/
 #define ADC_CON_REG            __REG (ADC_PHYS + 0x20)
+#define ADC_R0_REG             __REG (ADC_PHYS + 0x00)
+#define ADC_R1_REG             __REG (ADC_PHYS + 0x04)
+#define ADC_R2_REG             __REG (ADC_PHYS + 0x08)
+#define ADC_R3_REG             __REG (ADC_PHYS + 0x0C)
+#define ADC_CSEL_REG           __REG (ADC_PHYS + 0x24)
+#define ADC_INT_ENABLE_REG     __REG (ADC_PHYS + 0x28)
+#define ADC_INT_STATUS_REG     __REG (ADC_PHYS + 0x2C)
+#define ADC_INT_CLEAR_REG      __REG (ADC_PHYS + 0x30)
 
 /***********************************************************************
  * SYS_REG register definitions
