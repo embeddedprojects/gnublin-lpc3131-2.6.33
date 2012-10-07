@@ -1,0 +1,1 @@
+cmd_drivers/leds/led-class.ko := arm-unknown-linux-uclibcgnueabi-ld -EL -r  -T /home/brenson/Arbeitsfläche/Studium/01-Praktikum/03-Gnublin-repo/gnublin/lpc3131/rootfs/debian/debian_install/debian_process/linux-2.6.33-lpc313x/scripts/module-common.lds --build-id -o drivers/leds/led-class.ko drivers/leds/led-class.o drivers/leds/led-class.mod.o

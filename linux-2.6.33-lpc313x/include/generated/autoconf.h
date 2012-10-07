@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Linux kernel version: 2.6.33
- * Sat Oct  6 17:49:57 2012
+ * Sun Oct  7 02:36:28 2012
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
@@ -140,7 +140,7 @@
 #define CONFIG_IP_NF_IPTABLES 1
 #define CONFIG_FAT_DEFAULT_IOCHARSET "iso8859-1"
 #define CONFIG_INPUT_KEYBOARD 1
-#define CONFIG_EXTRA_FIRMWARE "rtlwifi/rtl8712u.bin"
+#define CONFIG_EXTRA_FIRMWARE ""
 #define CONFIG_IP_NF_MATCH_AH 1
 #define CONFIG_CPU_CP15 1
 #define CONFIG_BLK_DEV_INITRD 1
@@ -236,7 +236,6 @@
 #define CONFIG_NEW_LEDS 1
 #define CONFIG_FSNOTIFY 1
 #define CONFIG_SYSVIPC_SYSCTL 1
-#define CONFIG_FIRMWARE_IN_KERNEL 1
 #define CONFIG_CFG80211_WEXT 1
 #define CONFIG_IPV6_SIT 1
 #define CONFIG_I2C_HELPER_AUTO 1
@@ -255,7 +254,6 @@
 #define CONFIG_EPOLL 1
 #define CONFIG_CRYPTO_AEAD2 1
 #define CONFIG_LPC313X_WATCHDOG 1
-#define CONFIG_EXTRA_FIRMWARE_DIR "/home/brenson/gnublin-buildroot-git/buildroot-2011.11/target/device/Gnublin/"
 #define CONFIG_ZBOOT_ROM_TEXT 0x0
 #define CONFIG_NLS_CODEPAGE_850 1
 #define CONFIG_NLS_CODEPAGE_437 1

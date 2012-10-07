@@ -1,0 +1,1 @@
+cmd_drivers/input/built-in.o :=  arm-unknown-linux-uclibcgnueabi-ld -EL    -r -o drivers/input/built-in.o drivers/input/input-core.o drivers/input/input-polldev.o drivers/input/mousedev.o drivers/input/keyboard/built-in.o 

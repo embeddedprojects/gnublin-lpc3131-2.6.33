@@ -81,8 +81,8 @@
 
 
 #ifndef __ADC_DRV_C__
-int init_module(void);
-void cleanup_module(void);
+//static int __init mod_init(void);
+//static void __exit mod_exit(void);
 static int device_open(struct inode *, struct file *);
 static int device_release(struct inode *, struct file *);
 static ssize_t device_read(struct file *, char *, size_t, loff_t *);

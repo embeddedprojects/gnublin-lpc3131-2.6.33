@@ -1,0 +1,2 @@
+kernel/drivers/spi/spi_lpc313x.ko
+kernel/drivers/spi/spidev.ko

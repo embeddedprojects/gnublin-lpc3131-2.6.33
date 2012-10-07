@@ -192,7 +192,7 @@ static ssize_t device_write(struct file *filp, const char *buff, size_t len, lof
 
 
 /** called when module loaded */
-int init_module(void) {
+static int __init mod_init(void) {
 	adc_resolution = 10;	
 	adc_channel = 0;
 	adc_powersave = ADC_POWERSAVE_AUTO;
@@ -223,7 +223,7 @@ int init_module(void) {
 }
 
 /** called when module unloaded */
-void cleanup_module(void) {
+static void __exit mod_exit(void) {
 	lpc313x_deinit_adc();
 	unregister_chrdev(Major, DEVICE_NAME);
 	printk(KERN_INFO "[lpc313x adc] DRIVER UNLOADED\n");
@@ -359,8 +359,8 @@ int lpc313x_adc_powersave_off(void) {
 }
 */
 
-module_init(init_module);
-module_exit(cleanup_module);
+module_init(mod_init);
+module_exit(mod_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR(DRIVER_AUTHOR);

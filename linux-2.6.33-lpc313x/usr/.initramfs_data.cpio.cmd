@@ -1,0 +1,1 @@
+cmd_usr/initramfs_data.cpio := /bin/bash /home/brenson/Arbeitsfläche/Studium/01-Praktikum/03-Gnublin-repo/gnublin/lpc3131/rootfs/debian/debian_install/debian_process/linux-2.6.33-lpc313x/scripts/gen_initramfs_list.sh -o usr/initramfs_data.cpio   -d
