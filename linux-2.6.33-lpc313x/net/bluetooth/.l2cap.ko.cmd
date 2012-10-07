@@ -1,1 +1,0 @@
-cmd_net/bluetooth/l2cap.ko := arm-unknown-linux-uclibcgnueabi-ld -EL -r  -T /home/brenson/Arbeitsfläche/Studium/01-Praktikum/03-Gnublin-repo/gnublin/lpc3131/rootfs/debian/debian_install/debian_process/linux-2.6.33-lpc313x/scripts/module-common.lds --build-id -o net/bluetooth/l2cap.ko net/bluetooth/l2cap.o net/bluetooth/l2cap.mod.o

@@ -1,3 +1,0 @@
-kernel/drivers/net/can/vcan.ko
-kernel/drivers/net/can/can-dev.ko
-kernel/drivers/net/can/mcp251x.ko

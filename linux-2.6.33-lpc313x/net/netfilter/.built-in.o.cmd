@@ -1,1 +1,0 @@
-cmd_net/netfilter/built-in.o :=  arm-unknown-linux-uclibcgnueabi-ld -EL    -r -o net/netfilter/built-in.o net/netfilter/netfilter.o net/netfilter/x_tables.o net/netfilter/xt_tcpudp.o net/netfilter/xt_HL.o net/netfilter/xt_hl.o net/netfilter/ipvs/built-in.o 
