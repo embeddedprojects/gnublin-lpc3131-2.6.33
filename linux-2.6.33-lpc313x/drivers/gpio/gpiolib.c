@@ -98,20 +98,20 @@ static int gpio_ensure_requested(struct gpio_desc *desc, unsigned offset)
 	const struct gpio_chip *chip = desc->chip;
 	const int gpio = chip->base + offset;
 
-	if (WARN(test_and_set_bit(FLAG_REQUESTED, &desc->flags) == 0,
-			"autorequest GPIO-%d\n", gpio)) {
-		if (!try_module_get(chip->owner)) {
-			pr_err("GPIO-%d: module can't be gotten \n", gpio);
-			clear_bit(FLAG_REQUESTED, &desc->flags);
-			/* lose */
-			return -EIO;
-		}
-		desc_set_label(desc, "[auto]");
-		/* caller must chip->request() w/o spinlock */
-		if (chip->request)
-			return 1;
-	}
-	return 0;
+  /* if (WARN(test_and_set_bit(FLAG_REQUESTED, &desc->flags) == 0, "autorequest GPIO-%d\n", gpio)) { */
+  if (test_and_set_bit(FLAG_REQUESTED, &desc->flags) == 0) {
+          if (!try_module_get(chip->owner)) {
+                  pr_err("GPIO-%d: module can't be gotten \n", gpio);
+                  clear_bit(FLAG_REQUESTED, &desc->flags);
+                  /* lose */
+                  return -EIO;
+          }
+          desc_set_label(desc, "[auto]");
+          /* caller must chip->request() w/o spinlock */
+          if (chip->request)
+                  return 1;
+  }
+  return 0;
 }
 
 /* caller holds gpio_lock *OR* gpio is marked as requested */

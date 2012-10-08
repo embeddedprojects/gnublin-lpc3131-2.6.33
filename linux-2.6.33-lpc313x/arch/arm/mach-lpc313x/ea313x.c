@@ -356,8 +356,14 @@ static void spi_set_cs_state(int cs_num, int state)
 	/* Only CS0 is supported, so no checks are needed */
 	(void) cs_num;
 
+#if defined(CONFIG_CS_TO_IO14)
 	/* Set GPO state for CS0 */
-	gpio_set_value(GPIO_SPI_CS_OUT0, state); 
+	gpio_set_value(GPIO_GPIO14, state);
+
+#else
+	gpio_set_value(GPIO_SPI_CS_OUT0, state);
+
+#endif
 }
 
 struct lpc313x_spics_cfg lpc313x_stdspics_cfg[] =
@@ -398,8 +404,10 @@ static int __init lpc313x_spidev_register(void)
 	struct spi_board_info info =
 	{
 		.modalias = "spidev",
+		//.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
 		.bus_num = 0,
+		//.irq = IRQ_PIN11,
 		.chip_select = 0,
 	};
 
@@ -492,6 +500,10 @@ static void __init ea313x_init(void)
 	
 	i2c_register_board_info(0, ea313x_i2c_devices,
 		ARRAY_SIZE(ea313x_i2c_devices));
+
+#if defined(CONFIG_CS_TO_IO14)	
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x100);
+#endif
 
 #if defined(CONFIG_MACH_EA3152)
 	i2c_register_board_info(1, ea3152_i2c1_devices,

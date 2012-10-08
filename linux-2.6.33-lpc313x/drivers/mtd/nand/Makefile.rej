@@ -1,9 +1,0 @@
---- drivers/mtd/nand/Makefile
-+++ drivers/mtd/nand/Makefile
-@@ -42,5 +42,6 @@
- obj-$(CONFIG_MTD_NAND_W90P910)		+= w90p910_nand.o
- obj-$(CONFIG_MTD_NAND_NOMADIK)		+= nomadik_nand.o
- obj-$(CONFIG_MTD_NAND_BCM_UMI)		+= bcm_umi_nand.o nand_bcm_umi.o
-+obj-$(CONFIG_MTD_NAND_LPC313X)		+= lpc313x_nand.o
- 
- nand-objs := nand_base.o nand_bbt.o

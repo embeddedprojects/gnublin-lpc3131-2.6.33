@@ -35,3 +35,31 @@ config LPC3152_AD
 source "kernel/Kconfig.hz"
 
 endmenu
+
+
+
+menu "Special settings"
+	depends on ARCH_LPC313X
+
+
+config CS_TO_IO14
+	bool "Set CS pin to GPIO14"
+	help
+		It may be helpfull to change the CS Pin to GPIO14, if you want to use an 14-Pin connector
+		on GNUBLIN.
+endmenu
+
+#menu "GNUBLIN IRQ INITIALISATION(not supportet yet!)"
+#	depends on ARCH_LPC313X
+
+	
+#choice 
+#	 bool "Choice menu"
+	 
+#		config IRQ_GPIO_LOW_ACTIVE
+#		bool "LOW"
+#		config IRQ_GPIO_HIGH_ACTIVE
+#	 	bool "HIGH"
+#	endchoice
+#endmenu
+
