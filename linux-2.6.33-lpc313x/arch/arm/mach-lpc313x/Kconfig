@@ -42,10 +42,10 @@ menu "Special settings"
 	depends on ARCH_LPC313X
 
 
-config CS_TO_IO14
-	bool "Set CS pin to GPIO14"
+config CS_TO_IO11
+	bool "Set CS pin to GPIO11"
 	help
-		It may be helpfull to change the CS Pin to GPIO14, if you want to use an 14-Pin connector
+		It may be helpfull to change the CS Pin to GPIO11, if you want to use an 14-Pin connector
 		on GNUBLIN.
 endmenu
 

@@ -1,0 +1,16 @@
+GNUBLIN COMMUNITY RELEASE KERNEL
+
+
+you can have a look at the changes with:
+
+git log
+
+
+
+Changes:
+
+1. CS_TO_GPIO14 
+	make menuconfig
+	---->system type---->special settings
+
+

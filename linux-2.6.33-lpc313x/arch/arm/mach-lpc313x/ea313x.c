@@ -356,9 +356,9 @@ static void spi_set_cs_state(int cs_num, int state)
 	/* Only CS0 is supported, so no checks are needed */
 	(void) cs_num;
 
-#if defined(CONFIG_CS_TO_IO14)
+#if defined(CONFIG_CS_TO_IO11)
 	/* Set GPO state for CS0 */
-	gpio_set_value(GPIO_GPIO14, state);
+	gpio_set_value(GPIO_GPIO11, state);
 
 #else
 	gpio_set_value(GPIO_SPI_CS_OUT0, state);
@@ -501,8 +501,8 @@ static void __init ea313x_init(void)
 	i2c_register_board_info(0, ea313x_i2c_devices,
 		ARRAY_SIZE(ea313x_i2c_devices));
 
-#if defined(CONFIG_CS_TO_IO14)	
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x100);
+#if defined(CONFIG_CS_TO_IO11)	
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x20);
 #endif
 
 #if defined(CONFIG_MACH_EA3152)
