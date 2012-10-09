@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Tue Oct  9 12:13:45 2012
+# Tue Oct  9 14:42:25 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -745,6 +745,7 @@ CONFIG_MII=m
 # CONFIG_SMC91X is not set
 # CONFIG_DM9000 is not set
 CONFIG_ENC28J60=m
+CONFIG_ENC28J60_SPI_DEV=y
 # CONFIG_ENC28J60_WRITEVERIFY is not set
 # CONFIG_ETHOC is not set
 # CONFIG_SMC911X is not set
