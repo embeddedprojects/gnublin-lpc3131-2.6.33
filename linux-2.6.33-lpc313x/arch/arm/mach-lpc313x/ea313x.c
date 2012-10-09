@@ -424,7 +424,7 @@ static int __init lpc313x_enc_register(void)
 	{
 		.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
-		.bus_num = 0,
+		.bus_num = 1,
 		.irq = IRQ_GPIO14,
 		.chip_select = 0,
 	};
