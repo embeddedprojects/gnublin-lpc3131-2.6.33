@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Linux kernel version: 2.6.33
- * Tue Oct  9 12:13:49 2012
+ * Tue Oct  9 15:22:31 2012
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
@@ -256,6 +256,7 @@
 #define CONFIG_NET_IPIP 1
 #define CONFIG_R8712U 1
 #define CONFIG_USB_NET_ZAURUS_MODULE 1
+#define CONFIG_ENC28J60_SPI_DEV 1
 #define CONFIG_TREE_RCU 1
 #define CONFIG_IP_PNP_RARP 1
 #define CONFIG_SHMEM 1

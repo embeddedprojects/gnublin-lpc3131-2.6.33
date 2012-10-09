@@ -416,6 +416,24 @@ static int __init lpc313x_spidev_register(void)
 arch_initcall(lpc313x_spidev_register);
 #endif
 
+#if defined(CONFIG_ENC28J60_SPI_DEV)
+
+static int __init lpc313x_enc_register(void)
+{
+	struct spi_board_info info =
+	{
+		.modalias = "enc28j60",
+		.max_speed_hz = 1000000,
+		.bus_num = 0,
+		.irq = IRQ_GPIO14,
+		.chip_select = 0,
+	};
+
+	return spi_register_board_info(&info, 1);
+}
+arch_initcall(lpc313x_enc_register);
+#endif
+
 #if defined(CONFIG_MTD_DATAFLASH)
 /* MTD Data FLASH driver registration */
 static int __init lpc313x_spimtd_register(void)

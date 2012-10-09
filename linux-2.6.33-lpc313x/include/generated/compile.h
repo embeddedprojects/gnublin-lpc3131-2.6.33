@@ -1,7 +1,7 @@
-/* This file is auto generated, version 14 */
+/* This file is auto generated, version 17 */
 #define UTS_MACHINE "arm"
-#define UTS_VERSION "#14 Tue Oct 9 12:16:46 CEST 2012"
-#define LINUX_COMPILE_TIME "12:16:46"
+#define UTS_VERSION "#17 Tue Oct 9 15:28:21 CEST 2012"
+#define LINUX_COMPILE_TIME "15:28:21"
 #define LINUX_COMPILE_BY "root"
 #define LINUX_COMPILE_HOST "brenson-N53SN"
 #define LINUX_COMPILE_DOMAIN
