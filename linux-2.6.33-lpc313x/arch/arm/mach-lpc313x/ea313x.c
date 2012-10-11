@@ -354,13 +354,26 @@ static struct resource lpc313x_spi_resources[] = {
 static void spi_set_cs_state(int cs_num, int state)
 {
 	/* Only CS0 is supported, so no checks are needed */
-	(void) cs_num;
+	//(void) cs_num;
 
 #if defined(CONFIG_CS_TO_IO11)
-	/* Set GPO state for CS0 */
+
 	gpio_set_value(GPIO_GPIO11, state);
 
+
+#elif defined(CONFIG_DUAL_MODE)
+
+	if(cs_num == 1) /* SPI-DEV Chipselect */
+	{
+		gpio_set_value(GPIO_GPIO11, state);
+	}
+	
+	if(cs_num == 0) /* Chipselect for second device */
+	{
+		gpio_set_value(GPIO_GPIO15, state);
+	}
 #else
+
 	gpio_set_value(GPIO_SPI_CS_OUT0, state);
 
 #endif
@@ -370,6 +383,12 @@ struct lpc313x_spics_cfg lpc313x_stdspics_cfg[] =
 {
 	/* SPI CS0 */
 	[0] =
+	{
+		.spi_spo	= 0, /* Low clock between transfers */
+		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
+		.spi_cs_set	= spi_set_cs_state,
+	},
+	[1] =
 	{
 		.spi_spo	= 0, /* Low clock between transfers */
 		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
@@ -404,11 +423,9 @@ static int __init lpc313x_spidev_register(void)
 	struct spi_board_info info =
 	{
 		.modalias = "spidev",
-		//.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
 		.bus_num = 0,
-		//.irq = IRQ_PIN11,
-		.chip_select = 0,
+		.chip_select = 1,
 	};
 
 	return spi_register_board_info(&info, 1);
@@ -425,7 +442,7 @@ static int __init lpc313x_enc_register(void)
 		.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
 		.bus_num = 1,
-		.irq = IRQ_GPIO14,
+		.irq = IRQ_GPIO_16,/*IRQ_GPIO14*/
 		.chip_select = 0,
 	};
 
@@ -507,8 +524,7 @@ static struct i2c_board_info ea3152_i2c1_devices[] __initdata = {
 static void __init ea313x_init(void)
 {
 	lpc313x_init();
-	/* register i2cdevices */
-	lpc313x_register_i2c_devices();
+	
 	
 
 	platform_add_devices(devices, ARRAY_SIZE(devices));
@@ -516,17 +532,36 @@ static void __init ea313x_init(void)
 	/* add DM9000 device */
 	ea_add_device_dm9000();
 	
-	i2c_register_board_info(0, ea313x_i2c_devices,
-		ARRAY_SIZE(ea313x_i2c_devices));
 
-#if defined(CONFIG_CS_TO_IO11)	
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x20);
+	/* register i2cdevices */
+	lpc313x_register_i2c_devices();
+	i2c_register_board_info(0, ea313x_i2c_devices,
+	ARRAY_SIZE(ea313x_i2c_devices));
+
+#if defined(CONFIG_DUAL_MODE)	
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO_11 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x200); /* GPIO_15 */
+	GPIO_IN(IOCONF_GPIO,0x400);		 /* GPIO_16 */ 
 #endif
 
+#if defined(CS_TO_IO11)
+GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
+#endif
+
+
+	/* Set I2C Pins as normal I/O PINs */
+	/*SYSCREG_I2C_SDA1_PCTRL = 0x02;
+	SYSCREG_I2C_SCL1_PCTRL = 0x02;
+	GPIO_OUT_LOW(IOCONF_I2C1, 0x01);
+	GPIO_IN(IOCONF_I2C1, 0x01);
+	GPIO_OUT_HIGH(IOCONF_I2C1, 0x02);
+	*/
 #if defined(CONFIG_MACH_EA3152)
 	i2c_register_board_info(1, ea3152_i2c1_devices,
 		ARRAY_SIZE(ea3152_i2c1_devices));
 #endif
+
+
 }
 
 static void __init ea313x_map_io(void)

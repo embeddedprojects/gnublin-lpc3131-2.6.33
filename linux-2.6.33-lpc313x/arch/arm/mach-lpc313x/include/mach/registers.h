@@ -326,6 +326,10 @@
 #define GPIO_IN(port, pin)       do { GPIO_M1_RESET(port) = pin; GPIO_M0_RESET(port) = pin;} while(0)
 #define GPIO_DRV_IP(port, pin)   do { GPIO_M1_RESET(port) = pin; GPIO_M0_SET(port) = pin;} while(0)
 
+#define SYSCREG_I2C_SDA1_PCTRL		__REG (SYS_PHYS + 0x150)
+#define SYSCREG_I2C_SCL1_PCTRL 		__REG (SYS_PHYS + 0x154)
+
+
 #define IOCONF_EBI_MCI       (0x000)
 #define IOCONF_EBI_I2STX_0   (0x040)
 #define IOCONF_CGU           (0x080)

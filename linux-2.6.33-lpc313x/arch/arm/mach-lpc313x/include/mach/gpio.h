@@ -143,8 +143,8 @@
 
 #define BASE_GPIO_I2C1 84
 #define NUM_GPIO_I2C1 2
-#define GPIO_I2C_SDA1         (BASE_GPIO_I2C1 0)
-#define GPIO_I2C_SCL1         (BASE_GPIO_I2C1 1)
+#define GPIO_I2C_SDA1         (BASE_GPIO_I2C1 + 0)
+#define GPIO_I2C_SCL1         (BASE_GPIO_I2C1 + 1)
 
 #define BASE_GPIO_SPI 86
 #define NUM_GPIO_SPI 5
