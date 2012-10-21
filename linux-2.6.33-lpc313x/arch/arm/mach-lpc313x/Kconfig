@@ -45,7 +45,8 @@ menu "Special settings"
 config DUAL_MODE
 	bool "Add a second SPI device"
 	help
-	   If you want to connect 2 SPI devices to GNUBLIN, then its required to have 2 chip selects.
+	   If you want to connect 2 SPI devices to GNUBLIN, then its required 
+	   to have 2 chip selects.
 	   This option will set a second chipselect.
 	   (Chip select 0 -->GPIO_15)
 	   (Chip select 1 -->GPIO_11)
@@ -54,7 +55,8 @@ config CS_TO_IO11
 	bool "Use GPIO11 as SPI chip select"
 	depends on !DUAL_MODE
 	help
-	   This option will set the CS_OUT0 Pin to GPIO11.
+	   This option will set the CS_OUT0 Pin to GPIO11. This is usefull for the
+	   standart GNUBLIN edition.
 
 endmenu
 
