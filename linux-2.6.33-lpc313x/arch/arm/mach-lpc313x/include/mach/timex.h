@@ -24,6 +24,6 @@
 
 #include "constants.h"
 
-#define CLOCK_TICK_RATE		(FFAST_CLOCK/2)
+#define CLOCK_TICK_RATE		FFAST_CLOCK
 
 #endif

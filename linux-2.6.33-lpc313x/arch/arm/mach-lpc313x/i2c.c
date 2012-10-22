@@ -76,7 +76,7 @@ static int i2c_lpc_resume(struct platform_device *pdev)
 
 static u32 calculate_input_freq(struct platform_device *pdev)
 {
-	return (FFAST_CLOCK/1000000);
+	return cgu_get_clk_freq(CGU_SB_I2C1_PCLK_ID)/1000000;
 }
 
 

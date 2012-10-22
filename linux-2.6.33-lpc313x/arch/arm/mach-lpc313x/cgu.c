@@ -770,6 +770,17 @@ int __init cgu_init(char *str)
 	g_clkin_freq[5] = cgu_get_pll_freq(CGU_HPLL0_ID, FFAST_CLOCK);
 	g_clkin_freq[6] = cgu_get_pll_freq(CGU_HPLL1_ID, FFAST_CLOCK);
  	printk(/*KERN_INFO*/ "cgu_init pll set at %d\n", g_clkin_freq[6]);
+
+	/* disable fractional divider for I2C etc.
+	 * we want 12MHz as input clock */
+	CGU_SB->base_fdc[CGU_SB_BASE2_FDIV_LOW_ID] = 0;
+
+	/* configure timers to select no fractional divider, but
+	 * direct AHB_APB1_BASE clock */
+	CGU_SB->clk_esr[CGU_SB_TIMER0_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER1_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER2_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER3_PCLK_ID] = 0;
 	
 	lpc313x_cgu_init_debugfs();
 

@@ -74,7 +74,7 @@ static void __init lpc313x_timer_init (void)
 static unsigned long lpc313x_gettimeoffset(void)
 {
 	u32 elapsed = LATCH - TIMER_VALUE(TIMER0_PHYS);
-	return ((elapsed * 100) / (XTAL_CLOCK / 20000));
+	return ((elapsed * 100) / (CLOCK_TICK_RATE / 10000));
 }
 
 static void lpc313x_timer_suspend(void)
