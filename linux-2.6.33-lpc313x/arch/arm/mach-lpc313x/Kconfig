@@ -56,7 +56,7 @@ config CS_TO_IO11
 	depends on !DUAL_MODE
 	help
 	   This option will set the CS_OUT0 Pin to GPIO11. This is usefull for the
-	   standart GNUBLIN edition.
+	   standart GNUBLIN edition, if you don't want to use the little tespoint.
 
 endmenu
 

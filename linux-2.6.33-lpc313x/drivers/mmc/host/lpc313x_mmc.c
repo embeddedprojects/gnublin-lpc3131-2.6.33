@@ -296,7 +296,7 @@ static u32 lpc313x_mci_prepare_command(struct mmc_host *mmc,
 	struct mmc_data	*data;
 	u32		cmdr;
 
-	cmd->error = -EINPROGRESS;
+	//cmd->error = -EINPROGRESS;
 	cmdr = cmd->opcode;
 
 	if(cmdr == 12)

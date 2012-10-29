@@ -374,10 +374,10 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 		if (brq.stop.error) {
 			/* Temporary do nothing. This is a little bug with SD MMC interface */
 			/* Will be corrected the next time -BN */
-			/*printk(KERN_ERR "%s: error %d sending stop command, "
+			printk(KERN_ERR "%s: error %d sending stop command, "
 			       "response %#x, card status %#x\n",
 			       req->rq_disk->disk_name, brq.stop.error,
-			       brq.stop.resp[0], status);*/
+			       brq.stop.resp[0], status);
 				
 		}
 
@@ -461,7 +461,9 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 		ret = __blk_end_request(req, 0, brq.data.bytes_xfered);
 		spin_unlock_irq(&md->lock);
 	}
-
+	/* Debug message -BN */
+	//printk("MMC DEBUG:An error ocurred on mmc bus\n");
+	
 	mmc_release_host(card->host);
 
 	spin_lock_irq(&md->lock);

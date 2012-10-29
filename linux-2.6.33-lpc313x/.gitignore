@@ -1,0 +1,10 @@
+.config.old
+.version
+Module.symvers
+arch/arm/boot/compressed/piggy.gzip
+include/config/auto.conf
+include/config/kernel.release
+include/config/tristate.conf
+include/generated/autoconf.h
+include/generated/compile.h
+include/generated/utsrelease.h

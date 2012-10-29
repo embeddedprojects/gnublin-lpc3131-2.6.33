@@ -544,7 +544,7 @@ static void __init ea313x_init(void)
 	GPIO_IN(IOCONF_GPIO,0x400);		 /* GPIO_16 */ 
 #endif
 
-#if defined(CS_TO_IO11)
+#if defined(CONFIG_CS_TO_IO11)
 GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
 #endif
 
