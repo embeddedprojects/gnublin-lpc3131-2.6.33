@@ -45,6 +45,8 @@
 #include <mach/i2c.h>
 #include <mach/board.h>
 
+#include <linux/can/platform/mcp251x.h>
+
 static struct lpc313x_mci_irq_data irq_data = {
 	.irq = IRQ_SDMMC_CD,
 };
@@ -418,6 +420,7 @@ static struct platform_device lpc313x_spi_device = {
 /* If both SPIDEV and MTD data flash are enabled with the same chip select, only 1 will work */
 #if defined(CONFIG_SPI_SPIDEV)
 /* SPIDEV driver registration */
+
 static int __init lpc313x_spidev_register(void)
 {
 	struct spi_board_info info =
@@ -431,6 +434,7 @@ static int __init lpc313x_spidev_register(void)
 	return spi_register_board_info(&info, 1);
 }
 arch_initcall(lpc313x_spidev_register);
+
 #endif
 
 #if defined(CONFIG_ENC28J60_SPI_DEV)
@@ -442,14 +446,55 @@ static int __init lpc313x_enc_register(void)
 		.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
 		.bus_num = 1,
-		.irq = IRQ_GPIO_14,/*IRQ_GPIO14*/
+		.irq = IRQ_GPIO_16,//IRQ_GPIO14
 		.chip_select = 0,
 	};
 
 	return spi_register_board_info(&info, 1);
 }
 arch_initcall(lpc313x_enc_register);
+
 #endif
+
+
+
+//#if defined(CONFIG_CAN_MCP251X)
+static int mcp251x_setup(struct spi_device *spi)
+{
+	return 0;
+}
+
+
+
+static int __init mcp251x_lpc313x_register (void)
+{
+
+  
+  static struct mcp251x_platform_data mcp251x_info = {
+        .oscillator_frequency = 16000000,
+        .board_specific_setup = &mcp251x_setup,
+        .model = CAN_MCP251X_MCP2515,
+        .power_enable = NULL,
+        .transceiver_enable = NULL,
+};
+  
+  
+  struct spi_board_info info = {
+          
+                  .modalias = "mcp251x",
+                  .platform_data = &mcp251x_info,
+                  .irq = IRQ_GPIO14,
+                  .max_speed_hz = 1000000,
+                  .chip_select = 1,
+		  .bus_num = 0,
+          };
+
+   return spi_register_board_info(&info, 1);
+}
+arch_initcall(mcp251x_lpc313x_register);
+
+//#endif
+
 
 #if defined(CONFIG_MTD_DATAFLASH)
 /* MTD Data FLASH driver registration */
@@ -548,9 +593,6 @@ static void __init ea313x_init(void)
 GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
 #endif
 
-#if defined(CONFIG_ENC28J60_SPI_DEV)
-GPIO_IN(IOCONF_GPIO,0x100);
-#endif
 
 	/* Set I2C Pins as normal I/O PINs */
 	/*SYSCREG_I2C_SDA1_PCTRL = 0x02;
