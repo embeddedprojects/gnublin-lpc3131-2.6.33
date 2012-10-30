@@ -372,8 +372,6 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 		}
 
 		if (brq.stop.error) {
-			/* Temporary do nothing. This is a little bug with SD MMC interface */
-			/* Will be corrected the next time -BN */
 			printk(KERN_ERR "%s: error %d sending stop command, "
 			       "response %#x, card status %#x\n",
 			       req->rq_disk->disk_name, brq.stop.error,

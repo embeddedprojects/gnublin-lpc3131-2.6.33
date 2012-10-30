@@ -442,7 +442,7 @@ static int __init lpc313x_enc_register(void)
 		.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
 		.bus_num = 1,
-		.irq = IRQ_GPIO_16,/*IRQ_GPIO14*/
+		.irq = IRQ_GPIO_14,/*IRQ_GPIO14*/
 		.chip_select = 0,
 	};
 
@@ -548,6 +548,9 @@ static void __init ea313x_init(void)
 GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
 #endif
 
+#if defined(CONFIG_ENC28J60_SPI_DEV)
+GPIO_IN(IOCONF_GPIO,0x100);
+#endif
 
 	/* Set I2C Pins as normal I/O PINs */
 	/*SYSCREG_I2C_SDA1_PCTRL = 0x02;
