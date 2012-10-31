@@ -72,7 +72,7 @@
 #define IRQ_VBUS_EN    31  /* VBUS power enable */
 #define IRQ_VBUS_OVRC  32  /* Detect VBUS over current - Host mode */
 #define IRQ_USB_ID     33  /* Detect ID pin change - OTG */
-#define IRQ_GPIO14	   34
+#define IRQ_GPIO_14	   34
 #define IRQ_I2C1_SDA   35
 #define IRQ_GPIO_16	   36
 
@@ -81,7 +81,7 @@
 	{IRQ_VBUS_EN, EVT_usb_otg_vbus_pwr_en, EVT_FALLING_EDGE}, \
 	{IRQ_VBUS_OVRC, EVT_USB_VBUS, EVT_FALLING_EDGE}, \
 	{IRQ_USB_ID, EVT_USB_ID, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO14, EVT_GPIO14, EVT_ACTIVE_LOW}, \
+	{IRQ_GPIO_14, EVT_GPIO14, EVT_ACTIVE_LOW}, \
 	{IRQ_I2C1_SDA, EVT_I2C_SDA1, EVT_ACTIVE_LOW}, \
 	{IRQ_GPIO_16, EVT_GPIO16, EVT_ACTIVE_LOW}, \
 

@@ -483,7 +483,7 @@ static int __init mcp251x_lpc313x_register (void)
           
                   .modalias = "mcp251x",
                   .platform_data = &mcp251x_info,
-                  .irq = IRQ_GPIO14,
+                  .irq = IRQ_GPIO_14,
                   .max_speed_hz = 1000000,
                   .chip_select = 1,
 		  .bus_num = 0,
