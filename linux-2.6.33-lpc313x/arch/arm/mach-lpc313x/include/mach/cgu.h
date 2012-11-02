@@ -470,7 +470,8 @@ typedef enum
 #define CGU_WKE_CLKS_32_63 ( _BIT(CGU_SB_IOCONF_PCLK_ID - 32) | _BIT(CGU_SB_CGU_PCLK_ID - 32) | \
                              _BIT(CGU_SB_SYSCREG_PCLK_ID - 32) | \
                              _BIT(CGU_SB_AHB2APB1_ASYNC_PCLK_ID - 32) | _BIT(CGU_SB_AHB2APB2_ASYNC_PCLK_ID - 32) | \
-                             _BIT(CGU_SB_AHB2APB3_ASYNC_PCLK_ID - 32) | _BIT(CGU_SB_TIMER0_PCLK_ID - 32) )
+                             _BIT(CGU_SB_AHB2APB3_ASYNC_PCLK_ID - 32) | _BIT(CGU_SB_TIMER0_PCLK_ID - 32) | \
+	       		     _BIT(CGU_SB_TIMER1_PCLK_ID - 32)	)
 
 
 #define CGU_WKE_CLKS_64_92 ( 0 )

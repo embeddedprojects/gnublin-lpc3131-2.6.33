@@ -110,7 +110,7 @@ int gpio_is_valid(unsigned gpio)
 				ret = 0;
 			break;
 		case IOCONF_GPIO:
-			if (pin_no > 14)
+			if (pin_no > 18)
 				ret = 0;
 			break;
 		case IOCONF_UART:

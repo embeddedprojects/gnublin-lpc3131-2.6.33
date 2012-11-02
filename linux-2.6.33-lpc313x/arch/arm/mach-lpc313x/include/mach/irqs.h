@@ -72,18 +72,12 @@
 #define IRQ_VBUS_EN    31  /* VBUS power enable */
 #define IRQ_VBUS_OVRC  32  /* Detect VBUS over current - Host mode */
 #define IRQ_USB_ID     33  /* Detect ID pin change - OTG */
-#define IRQ_GPIO14	   34
-#define IRQ_I2C1_SDA   35
-#define IRQ_GPIO_16	   36
 
 #define _INTERNAL_IRQ_EVENT_MAP	\
 	{IRQ_WDT, EVT_wdog_m0, EVT_RISING_EDGE}, \
 	{IRQ_VBUS_EN, EVT_usb_otg_vbus_pwr_en, EVT_FALLING_EDGE}, \
 	{IRQ_VBUS_OVRC, EVT_USB_VBUS, EVT_FALLING_EDGE}, \
 	{IRQ_USB_ID, EVT_USB_ID, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO14, EVT_GPIO14, EVT_ACTIVE_LOW}, \
-	{IRQ_I2C1_SDA, EVT_I2C_SDA1, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO_16, EVT_GPIO16, EVT_ACTIVE_LOW}, \
 
 #if defined(CONFIG_LPC3152_AD)
 /* For chips with analog die there are some more AD events routed
@@ -102,7 +96,7 @@
 
 #else
 #define CHIP_IRQ_EVENT_MAP   _INTERNAL_IRQ_EVENT_MAP
-#define NR_IRQ_CHIP_EVT	     7
+#define NR_IRQ_CHIP_EVT	     4
 #endif
 
 /* now compute the board start IRQ number */
@@ -185,6 +179,42 @@
 #define IRQ_EVTR2_END          0
 #define IRQ_EVTR3_START        0
 #define IRQ_EVTR3_END          0
+
+
+#elif defined (CONFIG_MACH_GNUBLIN)
+# define IRQ_DM9000_ETH_INT   IRQ_BOARD_START	/* Ethernet chip */
+# define IRQ_SDMMC_CD         (IRQ_BOARD_START + 1)	/* SD card detect */
+# define IRQ_EA_VBUS_OVRC     (IRQ_BOARD_START + 2)	/* Over current indicator */
+# define IRQ_GPIO_11	      (IRQ_BOARD_START + 3)	/* GPIO11 */
+# define IRQ_GPIO_14	      (IRQ_BOARD_START + 4)	/* GPIO14 */
+# define IRQ_GPIO_15	      (IRQ_BOARD_START + 5)	/* GPIO15 */
+# define IRQ_GPIO_16	      (IRQ_BOARD_START + 6)	/* GPIO15 */
+# define NR_IRQ_BOARD         7
+
+/* now define board irq to event pin map */
+#define BOARD_IRQ_EVENT_MAP	{ \
+	CHIP_IRQ_EVENT_MAP \
+	{IRQ_DM9000_ETH_INT, EVT_mNAND_RYBN3, EVT_ACTIVE_HIGH}, \
+  {IRQ_SDMMC_CD, EVT_mNAND_RYBN2, EVT_ACTIVE_LOW}, \
+	{IRQ_EA_VBUS_OVRC, EVT_I2SRX_WS0, EVT_ACTIVE_LOW}, \
+	{IRQ_GPIO_11, EVT_GPIO11, 0}, \
+	{IRQ_GPIO_14, EVT_GPIO14, 0}, \
+	{IRQ_GPIO_15, EVT_GPIO15, 0}, \
+	{IRQ_GPIO_16, EVT_GPIO16, 0}, \
+	}
+  //{IRQ_SDMMC_CD, EVT_mI2STX_BCK0, EVT_ACTIVE_LOW}, --hh
+
+
+/* Following defines group the board IRQs into 4 IRQ_EVNTR groups.
+   IRQ_EVT_ROUTERx IRQ is generated when event in the corresponding 
+   group triggers.
+*/
+#define IRQ_EVTR1_START        IRQ_DM9000_ETH_INT
+#define IRQ_EVTR1_END          IRQ_DM9000_ETH_INT
+#define IRQ_EVTR2_START        IRQ_SDMMC_CD
+#define IRQ_EVTR2_END          IRQ_SDMMC_CD
+#define IRQ_EVTR3_START        IRQ_EA_VBUS_OVRC
+#define IRQ_EVTR3_END          IRQ_GPIO_16
 
 #else
 # define NR_IRQ_BOARD          0

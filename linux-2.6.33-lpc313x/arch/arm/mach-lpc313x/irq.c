@@ -114,25 +114,31 @@ static int evt_set_type(unsigned irq, unsigned type)
 	case IRQ_TYPE_EDGE_RISING:
 		EVRT_APR(bank) |= _BIT(bit_pos);
 		EVRT_ATR(bank) |= _BIT(bit_pos);
+		set_irq_handler(irq, handle_edge_irq);
 		break;
 	case IRQ_TYPE_EDGE_FALLING:
 		EVRT_APR(bank) &= ~_BIT(bit_pos);
 		EVRT_ATR(bank) |= _BIT(bit_pos);
+		set_irq_handler(irq, handle_edge_irq);
 		break;
 	case IRQ_TYPE_EDGE_BOTH:
-		EVRT_ATR(bank) |= _BIT(bit_pos);
+		return -EINVAL;
 		break;
 	case IRQ_TYPE_LEVEL_HIGH:
 		EVRT_APR(bank) |= _BIT(bit_pos);
 		EVRT_ATR(bank) &= ~_BIT(bit_pos);
+		set_irq_handler(irq, handle_level_irq);
 		break;
 	case IRQ_TYPE_LEVEL_LOW:
 		EVRT_APR(bank) &= ~_BIT(bit_pos);
 		EVRT_ATR(bank) &= ~_BIT(bit_pos);
+		set_irq_handler(irq, handle_level_irq);
 		break;
 	default:
 		return -EINVAL;
 	}
+	printk(KERN_INFO "[EVRT] set irq type %d bank %d bit %08x -> APR=%08x, ATR=%08x\n",
+			type, bank, 1<<bit_pos, EVRT_APR(bank), EVRT_ATR(bank));
 
 	return 0;
 }
@@ -292,7 +298,9 @@ void __init lpc313x_init_irq(void)
 				EVRT_ATR(bank) |= _BIT(bit_pos);
 				set_irq_handler(irq, handle_edge_irq);
 			default:
-				printk("Invalid Event type.\r\n");
+				printk("Ignoring event %d at this time.\n", irq_2_event[irq - IRQ_EVT_START].event_pin);
+				/* disable irq at this time */
+				evt_mask_irq(irq);
 				break;
 		}
 		if ( (irq >= IRQ_EVTR0_START) && (irq <= IRQ_EVTR0_END) ) {

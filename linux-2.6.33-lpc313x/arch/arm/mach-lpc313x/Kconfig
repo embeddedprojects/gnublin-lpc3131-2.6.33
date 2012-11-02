@@ -10,6 +10,11 @@ config MACH_EA313X
 	help
 	  Say Y here if you are using the Embedded Artist's EA313x board
 
+config MACH_GNUBLIN
+	bool "gnublin board"
+	help
+	  Say Y here if you are using the Embedded Gnublin Board
+
 config MACH_EA3152
 	bool "ea3152 board"
 	select LPC3152_AD

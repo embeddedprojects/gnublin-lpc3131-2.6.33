@@ -333,16 +333,34 @@ static void lpc313x_gpiolib_set(struct gpio_chip *chip,
 static int lpc313x_gpiolib_to_irq(struct gpio_chip *chip, unsigned offset)
 {
 	struct lpc313x_gpio_chip *pchip = to_lpc313x_gpio_chip(chip);
+	int res = -1;
 
 	if(pchip->pins) {
 		int event = pchip->pins[offset].event_id;
 		if(event >= 0) {
-      return (event + NR_IRQ_CPU);   
+			/* jg: if we had access to irq_2_event[] in irq.c we could
+			 * walk through the map and identify the correct irq.
+			 * Now we hard code the irq <-> gpio mapping again *sigh*
+			 */
+			switch(offset) {
+				case 11:
+					res = IRQ_GPIO_11;
+					break;
+				case 14:
+					res = IRQ_GPIO_14;
+					break;
+				case 15:
+					res = IRQ_GPIO_15;
+					break;
+				default:
+					res = event + NR_IRQ_CPU;
+			}
+		/*return (event + NR_IRQ_CPU);   */
              /* In patch 0009... by Ingo Albrecht this is 
                 IRQ_FOR_EVENT(event);    --hh */
 		}
 	}
-	return -1;
+	return res;
 }
 
 static void lpc313x_gpiolib_dbg_show(struct seq_file *s, struct gpio_chip *chip)
