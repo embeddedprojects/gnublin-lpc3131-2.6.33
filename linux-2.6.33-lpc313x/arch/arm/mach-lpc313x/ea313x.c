@@ -445,9 +445,9 @@ static int __init lpc313x_enc_register(void)
 	{
 		.modalias = "enc28j60",
 		.max_speed_hz = 1000000,
-		.bus_num = 1,
+		.bus_num = 0,
 		.irq = IRQ_GPIO_14,//IRQ_GPIO14
-		.chip_select = 0,
+		.chip_select = 1,
 	};
 
 	return spi_register_board_info(&info, 1);
@@ -458,7 +458,7 @@ arch_initcall(lpc313x_enc_register);
 
 
 
-//#if defined(CONFIG_CAN_MCP251X)
+#if 0
 static int mcp251x_setup(struct spi_device *spi)
 {
 	return 0;
@@ -493,7 +493,7 @@ static int __init mcp251x_lpc313x_register (void)
 }
 arch_initcall(mcp251x_lpc313x_register);
 
-//#endif
+#endif
 
 
 #if defined(CONFIG_MTD_DATAFLASH)
