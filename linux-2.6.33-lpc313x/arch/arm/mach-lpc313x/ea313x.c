@@ -486,7 +486,7 @@ static int __init mcp251x_lpc313x_register (void)
                   .irq = IRQ_GPIO_14,
                   .max_speed_hz = 1000000,
                   .chip_select = 1,
-		  .bus_num = 0,
+		  		  .bus_num = 0,
           };
 
    return spi_register_board_info(&info, 1);
