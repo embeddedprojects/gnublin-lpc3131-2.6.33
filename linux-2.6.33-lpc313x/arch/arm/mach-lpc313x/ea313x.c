@@ -445,7 +445,7 @@ static int __init lpc313x_enc_register(void)
 	struct spi_board_info info =
 	{
 		.modalias = "enc28j60",
-		.max_speed_hz = 1000000,
+		.max_speed_hz = 25000000,
 		.bus_num = 0,
 		.irq = IRQ_GPIO_14,//IRQ_GPIO14
 		.chip_select = 0,
