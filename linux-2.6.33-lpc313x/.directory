@@ -1,2 +1,5 @@
 [Dolphin]
-Timestamp=2012,10,30,17,17,32
+Timestamp=2012,11,12,9,31,28
+
+[Settings]
+ShowDotFiles=true
