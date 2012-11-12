@@ -593,7 +593,7 @@ static int __devinit mcp7940_probe(struct i2c_client *client,
 //		[ds_1337] = 0,
 //		[ds_1339] = DS1339_BIT_BBSQI,
 //		[ds_3231] = DS3231_BIT_BBSQW,
-	};
+//	};
 
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE_DATA)
 	    && !i2c_check_functionality(adapter, I2C_FUNC_SMBUS_I2C_BLOCK))
