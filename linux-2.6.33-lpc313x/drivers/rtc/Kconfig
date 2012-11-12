@@ -184,6 +184,15 @@ config RTC_DRV_RV3029
 	  This driver can also be built as a module. If so, the module
 	  will be called rtc-rv3029.
 
+config RTC_DRV_MCP7940
+	tristate "Microchip 7940 (MCP7940)"
+	help
+	  If you say yes here you will get support for the
+	  Microchip 7940 I2C RTC chip.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called rtc-mcp7940.
+
 config RTC_DRV_RS5C372
 	tristate "Ricoh R2025S/D, RS5C372A/B, RV5C386, RV5C387A"
 	help
