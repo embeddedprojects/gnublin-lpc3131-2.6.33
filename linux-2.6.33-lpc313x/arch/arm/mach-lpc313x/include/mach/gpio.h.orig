@@ -34,7 +34,7 @@
 /* gpio defines (by group) */
 
 #define BASE_GPIO_GPIO 0
-#define NUM_GPIO_GPIO 21
+#define NUM_GPIO_GPIO 19
 #define GPIO_GPIO1  (BASE_GPIO_GPIO + 0)
 #define GPIO_GPIO0  (BASE_GPIO_GPIO + 1)
 #define GPIO_GPIO2  (BASE_GPIO_GPIO + 2)
