@@ -131,7 +131,7 @@ struct fsl_usb2_platform_data lpc313x_fsl_config = {
 	.phy_mode = FSL_USB2_PHY_UTMI,
 };
 
-#if defined(CONFIG_USB_GADGET_FSL_USB2) || defined(CONFIG_USB_OTG)
+#if defined(CONFIG_USB_FSL_USB2) || defined(CONFIG_USB_OTG)
 
 static struct platform_device lpc313x_udc_device = {
 	.name = "fsl-usb2-udc",
@@ -230,7 +230,7 @@ int __init usbotg_init(void)
 	
 	/* check ID state */
 	if ((USB_DEV_OTGSC & OTGSC_STATUS(OTGSC_ID_INT))) {
-#if defined(CONFIG_USB_GADGET_FSL_USB2)
+#if defined(CONFIG_USB_FSL_USB2)
 		/* register gadget */
 		printk(KERN_INFO "Registering USB gadget 0x%08x 0x%08x (%d)\n", USB_DEV_OTGSC, EVRT_RSR(bank), bank);
 		retval = platform_device_register(&lpc313x_udc_device);

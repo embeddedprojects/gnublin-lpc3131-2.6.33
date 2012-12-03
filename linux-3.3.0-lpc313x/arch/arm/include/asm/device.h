@@ -21,6 +21,7 @@ struct pdev_archdata {
 #ifdef CONFIG_ARCH_OMAP
 	struct omap_device *od;
 #endif
+	u64 dma_mask;
 };
 
 #endif
