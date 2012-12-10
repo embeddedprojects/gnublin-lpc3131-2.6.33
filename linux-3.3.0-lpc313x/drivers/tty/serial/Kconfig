@@ -9,6 +9,15 @@ source "drivers/tty/serial/8250/Kconfig"
 
 comment "Non-8250 serial port support"
 
+config SERIAL_SC16IS7X2
+	tristate "SC16IS7x2 chips"
+	depends on SPI_MASTER
+	select SERIAL_CORE
+	help
+	  Selecting this option will add support for SC16IS7x2 SPI UARTs.
+	  The GPIOs are exported via gpiolib interface.
+	  If unsure, say N.
+
 config SERIAL_AMBA_PL010
 	tristate "ARM AMBA PL010 serial port support"
 	depends on ARM_AMBA && (BROKEN || !ARCH_VERSATILE)

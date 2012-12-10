@@ -206,10 +206,14 @@
 #define PORT_VT8500	97
 
 /* Xilinx PSS UART */
-#define PORT_XUARTPS	98
+#define PORT_XUARTPS	100
 
 /* Atheros AR933X SoC */
 #define PORT_AR933X	99
+
+/* SC16IS7x2 SPI UART */
+#define PORT_SC16IS7X2	98
+
 
 
 #ifdef __KERNEL__

@@ -1927,7 +1927,7 @@ EXPORT_SYMBOL_GPL(serial8250_modem_status);
  */
 int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 {
-	unsigned char status;
+/*	unsigned char status;
 	unsigned long flags;
 	struct uart_8250_port *up =
 		container_of(port, struct uart_8250_port, port);
@@ -1948,7 +1948,27 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 		serial8250_tx_chars(up);
 
 	spin_unlock_irqrestore(&up->port.lock, flags);
-	return 1;
+	return 1;*/
+
+unsigned int status;
+unsigned long flags;
+unsigned int istatus;
+
+spin_lock_irqsave(&up->port.lock, flags);
+
+status = serial_inp(up, UART_LSR);
+
+DEBUG_INTR("status = %x...", status);
+
+istatus = (serial_in(up, UART_IIR) >> 1) & 0x7;
+if ((status & UART_LSR_DR) || istatus == 0x06)
+receive_chars(up, &status);
+check_modem_status(up);
+if (status & UART_LSR_THRE)
+transmit_chars(up);
+
+spin_unlock_irqrestore(&up->port.lock, flags);
+
 }
 EXPORT_SYMBOL_GPL(serial8250_handle_irq);
 
@@ -1995,7 +2015,8 @@ static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 	up = list_entry(i->head, struct uart_8250_port, list);
 
 	iir = serial_in(up, UART_IIR) & 0xf;
-	if (!(iir & UART_IIR_NO_INT)) {
+	if ((!(iir & UART_IIR_NO_INT)) || (((iir >>1) & 0x07) == 0x06)) {
+//	if (!(iir & UART_IIR_NO_INT)) {
 		status = serial_inp(up, UART_LSR);
 		if (status & UART_LSR_THRE) {
 			up->ier &= ~UART_IER_THRI;
@@ -2692,6 +2713,8 @@ dont_test_tx_en:
 	serial_inp(up, UART_MSR);
 	up->lsr_saved_flags = 0;
 	up->msr_saved_flags = 0;
+	
+	serial_outp(up, UART_FCR, 0xC7);
 
 	/*
 	 * Finally, enable interrupts.  Note: Modem status interrupts

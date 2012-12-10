@@ -183,6 +183,10 @@
 /* Aeroflex Gaisler GRLIB APBUART */
 #define PORT_APBUART    90
 
+/* SC16IS7x2 SPI UART */
+#define PORT_SC16IS7X2	98
+
+
 #ifdef __KERNEL__
 
 #include <linux/compiler.h>
