@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Mon Nov 12 16:27:56 2012
+# Mon Dec 10 14:07:14 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -908,6 +908,7 @@ CONFIG_SERIAL_8250_RUNTIME_UARTS=1
 #
 # Non-8250 serial port support
 #
+CONFIG_SERIAL_SC16IS7X2=m
 # CONFIG_SERIAL_MAX3100 is not set
 CONFIG_SERIAL_CORE=y
 CONFIG_SERIAL_CORE_CONSOLE=y
@@ -1024,8 +1025,8 @@ CONFIG_W1_MASTER_DS2482=m
 #
 # 1-wire Slaves
 #
-# CONFIG_W1_SLAVE_THERM is not set
-# CONFIG_W1_SLAVE_SMEM is not set
+CONFIG_W1_SLAVE_THERM=m
+CONFIG_W1_SLAVE_SMEM=m
 # CONFIG_W1_SLAVE_DS2431 is not set
 # CONFIG_W1_SLAVE_DS2433 is not set
 # CONFIG_W1_SLAVE_DS2760 is not set
