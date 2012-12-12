@@ -43,6 +43,11 @@
 #define ADS7828_CMD_PD3 0x0C /* Internal ref ON && A-D ON */
 #define ADS7828_INT_VREF_MV 2500 /* Internal vref is 2.5V, 2500mV */
 
+/* List of supported devices */
+enum ads7828_chips { ads7828, ads7830 };
+
+
+
 /* Addresses to scan */
 static const unsigned short normal_i2c[] = { 0x48, 0x49, 0x4a, 0x4b,
 	I2C_CLIENT_END };
@@ -57,16 +62,39 @@ module_param(vref_mv, int, S_IRUGO);
 
 /* Global Variables */
 static u8 ads7828_cmd_byte; /* cmd byte without channel bits */
-static unsigned int ads7828_lsb_resol; /* resolution of the ADC sample lsb */
+//static unsigned int ads7828_lsb_resol; /* resolution of the ADC sample lsb */
 
-/* Each client has this additional data */
+/**
+  * struct ads7828_data - client specific data
+  * @hwmon_dev:		The hwmon device.
+  * @update_lock:	Mutex protecting updates.
+  * @valid:		Validity flag.
+  * @last_updated:	Last updated time (in jiffies).
+  * @adc_input:		ADS7828_NCH samples.
+  * @lsb_resol:		Resolution of the A/D converter sample LSB.
+  * @read_channel:	Function used to read a channel.
+  */
 struct ads7828_data {
 	struct device *hwmon_dev;
-	struct mutex update_lock; /* mutex protect updates */
-	char valid; /* !=0 if following fields are valid */
-	unsigned long last_updated; /* In jiffies */
-	u16 adc_input[ADS7828_NCH]; /* ADS7828_NCH 12-bit samples */
+	struct mutex update_lock;
+ 	char valid;
+ 	unsigned long last_updated;
+ 	u16 adc_input[ADS7828_NCH];
+ 	unsigned int lsb_resol;
+ 	s32 (*read_channel)(const struct i2c_client *client, u8 command);
 };
+
+
+
+
+static const struct i2c_device_id ads7828_ids[] = {
+	{ "ads7828", ads7828 },
+	{ "ads7830", ads7830 },
+	{ }
+};
+
+
+
 
 /* Function declaration - necessary due to function dependencies */
 static int ads7828_detect(struct i2c_client *client,
@@ -104,7 +132,7 @@ static struct ads7828_data *ads7828_update_device(struct device *dev)
 
 		for (ch = 0; ch < ADS7828_NCH; ch++) {
 			u8 cmd = channel_cmd_byte(ch);
-			data->adc_input[ch] = ads7828_read_value(client, cmd);
+			data->adc_input[ch] = data->read_channel(client, cmd);
 		}
 		data->last_updated = jiffies;
 		data->valid = 1;
@@ -122,8 +150,8 @@ static ssize_t show_in(struct device *dev, struct device_attribute *da,
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct ads7828_data *data = ads7828_update_device(dev);
 	/* Print value (in mV as specified in sysfs-interface documentation) */
-	return sprintf(buf, "%d\n", (data->adc_input[attr->index] *
-		ads7828_lsb_resol)/1000);
+	return sprintf(buf, "%d\n",
+		       (data->adc_input[attr->index] * data->lsb_resol) / 1000);
 }
 
 #define in_reg(offset)\
@@ -164,24 +192,7 @@ static int ads7828_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id ads7828_id[] = {
-	{ "ads7828", 0 },
-	{ }
-};
-MODULE_DEVICE_TABLE(i2c, ads7828_id);
 
-/* This is the driver that will be inserted */
-static struct i2c_driver ads7828_driver = {
-	.class = I2C_CLASS_HWMON,
-	.driver = {
-		.name = "ads7828",
-	},
-	.probe = ads7828_probe,
-	.remove = ads7828_remove,
-	.id_table = ads7828_id,
-	.detect = ads7828_detect,
-	.address_list = normal_i2c,
-};
 
 /* Return 0 if detection is successful, -ENODEV otherwise */
 static int ads7828_detect(struct i2c_client *client,
@@ -189,6 +200,7 @@ static int ads7828_detect(struct i2c_client *client,
 {
 	struct i2c_adapter *adapter = client->adapter;
 	int ch;
+	bool is_8bit = false;
 
 	/* Check we have a valid client */
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_READ_WORD_DATA))
@@ -198,21 +210,30 @@ static int ads7828_detect(struct i2c_client *client,
 	dedicated register so attempt to sanity check using knowledge of
 	the chip
 	- Read from the 8 channel addresses
-	- Check the top 4 bits of each result are not set (12 data bits)
+	* - Check the top 4 bits of each result:
+	*   - They should not be set in case of 12-bit samples
+	*   - The two bytes should be equal in case of 8-bit samples
 	*/
 	for (ch = 0; ch < ADS7828_NCH; ch++) {
 		u16 in_data;
 		u8 cmd = channel_cmd_byte(ch);
 		in_data = ads7828_read_value(client, cmd);
 		if (in_data & 0xF000) {
-			pr_debug("%s : Doesn't look like an ads7828 device\n",
-				 __func__);
-			return -ENODEV;
+			if ((in_data >> 8) == (in_data & 0xFF)) {
+				/* Seems to be an ADS7830 (8-bit sample) */
+				is_8bit = true;
+			} else {
+				dev_dbg(&client->dev, "doesn't look like an "
+					"ADS7828 compatible device\n");
+				return -ENODEV;
+			}
 		}
 	}
 
-	strlcpy(info->type, "ads7828", I2C_NAME_SIZE);
-
+	if (is_8bit)
+		strlcpy(info->type, "ads7830", I2C_NAME_SIZE);
+	else
+		strlcpy(info->type, "ads7828", I2C_NAME_SIZE);
 	return 0;
 }
 
@@ -226,6 +247,15 @@ static int ads7828_probe(struct i2c_client *client,
 	if (!data) {
 		err = -ENOMEM;
 		goto exit;
+	}
+
+/* ADS7828 uses 12-bit samples, while ADS7830 is 8-bit */
+	if (id->driver_data == ads7828) {
+		data->read_channel = i2c_smbus_read_byte_data;
+		data->lsb_resol = (vref_mv * 1000) / 4096;
+	} else {
+		data->read_channel = i2c_smbus_read_byte_data;
+		data->lsb_resol = (vref_mv * 1000) / 256;
 	}
 
 	i2c_set_clientdata(client, data);
@@ -252,6 +282,22 @@ exit:
 	return err;
 }
 
+
+MODULE_DEVICE_TABLE(i2c, ads7828_ids);
+
+static struct i2c_driver ads7828_driver = {
+	.class = I2C_CLASS_HWMON,
+	.driver = {
+		.name = "ads7828",
+	},
+	.probe = ads7828_probe,
+	.remove = ads7828_remove,
+	.id_table = ads7828_ids,
+	.detect = ads7828_detect,
+	.address_list = normal_i2c,
+};
+
+
 static int __init sensors_ads7828_init(void)
 {
 	/* Initialize the command byte according to module parameters */
@@ -261,7 +307,7 @@ static int __init sensors_ads7828_init(void)
 		ADS7828_CMD_PD3 : ADS7828_CMD_PD1;
 
 	/* Calculate the LSB resolution */
-	ads7828_lsb_resol = (vref_mv*1000)/4096;
+	//ads7828_lsb_resol = (vref_mv*1000)/4096;
 
 	return i2c_add_driver(&ads7828_driver);
 }
@@ -272,7 +318,7 @@ static void __exit sensors_ads7828_exit(void)
 }
 
 MODULE_AUTHOR("Steve Hardy <steve@linuxrealtime.co.uk>");
-MODULE_DESCRIPTION("ADS7828 driver");
+MODULE_DESCRIPTION("Driver for TI ADS7828 A/D converter and compatibles");
 MODULE_LICENSE("GPL");
 
 module_init(sensors_ads7828_init);

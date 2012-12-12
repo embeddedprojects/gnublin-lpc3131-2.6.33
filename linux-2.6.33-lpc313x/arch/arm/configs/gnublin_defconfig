@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Mon Dec 10 14:07:14 2012
+# Wed Dec 12 16:27:12 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1088,7 +1088,7 @@ CONFIG_SENSORS_SHT15=m
 # CONFIG_SENSORS_SMSC47M1 is not set
 # CONFIG_SENSORS_SMSC47M192 is not set
 # CONFIG_SENSORS_SMSC47B397 is not set
-# CONFIG_SENSORS_ADS7828 is not set
+CONFIG_SENSORS_ADS7828=m
 # CONFIG_SENSORS_AMC6821 is not set
 # CONFIG_SENSORS_THMC50 is not set
 # CONFIG_SENSORS_TMP401 is not set
