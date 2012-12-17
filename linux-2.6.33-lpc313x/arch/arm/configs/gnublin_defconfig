@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Wed Dec 12 16:27:12 2012
+# Mon Dec 17 22:29:46 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -238,7 +238,8 @@ CONFIG_HZ=100
 #
 # Special settings
 #
-CONFIG_DUAL_MODE=y
+# CONFIG_DUAL_MODE is not set
+CONFIG_CS_TO_IO11=y
 
 #
 # Processor Type
