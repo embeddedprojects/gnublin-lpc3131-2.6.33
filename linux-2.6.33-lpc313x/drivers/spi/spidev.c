@@ -30,10 +30,10 @@
 #include <linux/errno.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
-
+#include <mach/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spidev.h>
-
+#include <linux/interrupt.h>
 #include <asm/uaccess.h>
 
 
@@ -50,9 +50,19 @@
  * nodes, since there is no fixed association of minor numbers with any
  * particular SPI bus or device.
  */
+
+
+
+
+/* Gnublin Board fix 
+ * Now it't possible to define a SPI device dynamically
+ */
+struct spi_device *glob_dev;
+
+
 #define SPIDEV_MAJOR			153	/* assigned */
 #define N_SPI_MINORS			32	/* ... up to 256 */
-
+#define DRV_NAME				"spidev"
 static DECLARE_BITMAP(minors, N_SPI_MINORS);
 
 
@@ -649,6 +659,97 @@ static struct spi_driver spidev_spi_driver = {
 static int __init spidev_init(void)
 {
 	int status;
+	
+	struct spi_master *spi_master;
+	struct spi_device *spi_device;
+	struct device *pdev;
+	char buff[64];
+	int status2 = 0;
+
+ 
+
+	spi_master = spi_busnum_to_master(0);
+
+	if (!spi_master) {
+
+	printk(KERN_ALERT "spi_busnum_to_master(%d) returned NULL\n", 0);
+	printk(KERN_ALERT "Missing modprobe omap2_mcspi?\n");
+
+	return -1;
+
+}
+	spi_device = spi_alloc_device(spi_master);
+
+	if (!spi_device) {
+
+		put_device(&spi_master->dev);
+
+		printk(KERN_ALERT "spi_alloc_device() failed\n");
+
+	return -1;
+
+	}
+
+ 
+
+	/* specify a chip select line */
+
+	spi_device->chip_select = 0;
+
+ 
+
+	/* Check whether this SPI bus.cs is already claimed */
+
+	snprintf(buff, sizeof(buff), "%s.%u",dev_name(&spi_device->master->dev),spi_device->chip_select);
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+
+	if (pdev) {
+
+		/* We are not going to use this spi_device, so free it */
+		spi_dev_put(spi_device);
+
+		/*
+		* There is already a device configured for this bus.cs combination.
+		* It's okay if it's us. This happens if we previously loaded then
+		* unloaded our driver.
+		* If it is not us, we complain and fail.
+		*/
+
+		if (pdev->driver && pdev->driver->name &&
+			strcmp(DRV_NAME, pdev->driver->name)) {
+
+			printk(KERN_ALERT"Driver [%s] already registered for %s\n",pdev->driver->name, buff);
+			status2 = -1;
+		}
+
+		} else {
+
+		spi_device->max_speed_hz = 1000000;
+		spi_device->mode = SPI_MODE_0;
+		spi_device->bits_per_word = 8;
+		spi_device->irq = IRQ_GPIO_14;
+		spi_device->controller_state = NULL;
+		spi_device->controller_data = NULL;
+		strlcpy(spi_device->modalias, DRV_NAME, SPI_NAME_SIZE);
+
+
+
+		/* Add spi_device to a global pointer
+         * This global pointer can later be easily removed without searching for
+         * the spi_device data
+         */
+		glob_dev = spi_device;
+
+		status2 = spi_add_device(spi_device);
+
+		if (status2 < 0) {
+		spi_dev_put(spi_device);
+		printk(KERN_ALERT "spi_add_device() failed: %d\n",status2);
+
+		}
+
+	}
+ 	put_device(&spi_master->dev);
 
 	/* Claim our 256 reserved device numbers.  Then register a class
 	 * that will key udev/mdev to add/remove /dev nodes.  Last, register
@@ -676,6 +777,37 @@ module_init(spidev_init);
 
 static void __exit spidev_exit(void)
 {
+	struct spi_master *spi_master;
+	struct spi_device *spi_device;
+	struct device *pdev;
+	char buff[64];
+	
+	
+
+	/* Connect the global spi_dev pointer */
+	spi_device = glob_dev;
+
+
+	/* Find the correct master with chipselect*/
+	spi_master = spi_busnum_to_master(0);
+	printk("dev name = %s\n",dev_name(&spi_master->dev) );
+
+	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
+
+	/* You have to use the spi_device not the spi_master struct to get the correct
+     * dev.bus pointer
+     */
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+
+	if(pdev)
+	{
+		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
+		spi_unregister_device(spi_device);
+	} else {
+		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
+	}	
+
+
 	spi_unregister_driver(&spidev_spi_driver);
 	class_destroy(spidev_class);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);

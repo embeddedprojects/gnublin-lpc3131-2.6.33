@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Mon Dec 17 22:29:46 2012
+# Thu Dec 20 11:02:17 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -976,7 +976,7 @@ CONFIG_SPI_LPC313X=y
 #
 # SPI Protocol Masters
 #
-CONFIG_SPI_SPIDEV=y
+CONFIG_SPI_SPIDEV=m
 # CONFIG_SPI_TLE62X0 is not set
 
 #

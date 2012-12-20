@@ -418,45 +418,6 @@ static struct platform_device lpc313x_spi_device = {
 	.resource	= lpc313x_spi_resources,
 };
 
-/* If both SPIDEV and MTD data flash are enabled with the same chip select, only 1 will work */
-#if defined(CONFIG_SPI_SPIDEV)
-/* SPIDEV driver registration */
-
-static int __init lpc313x_spidev_register(void)
-{
-	struct spi_board_info info =
-	{
-		.modalias = "spidev",
-		.max_speed_hz = 1000000,
-		.bus_num = 0,
-		.chip_select = 1,
-	};
-
-	return spi_register_board_info(&info, 1);
-}
-arch_initcall(lpc313x_spidev_register);
-
-#endif
-
-#if defined(CONFIG_ENC28J60_SPI_DEV)
-
-static int __init lpc313x_enc_register(void)
-{
-	struct spi_board_info info =
-	{
-		.modalias = "enc28j60",
-		.max_speed_hz = 25000000,
-		.bus_num = 0,
-		.irq = IRQ_GPIO_14,//IRQ_GPIO14
-		.chip_select = 0,
-	};
-
-	return spi_register_board_info(&info, 1);
-}
-arch_initcall(lpc313x_enc_register);
-
-#endif
-
 
 
 #if 0
@@ -604,13 +565,7 @@ GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
 GPIO_IN(IOCONF_GPIO,0x100);		 /* GPIO_14 */
 #endif
 
-	/* Set I2C Pins as normal I/O PINs */
-	/*SYSCREG_I2C_SDA1_PCTRL = 0x02;
-	SYSCREG_I2C_SCL1_PCTRL = 0x02;
-	GPIO_OUT_LOW(IOCONF_I2C1, 0x01);
-	GPIO_IN(IOCONF_I2C1, 0x01);
-	GPIO_OUT_HIGH(IOCONF_I2C1, 0x02);
-	*/
+	
 #if defined(CONFIG_MACH_EA3152)
 	i2c_register_board_info(1, ea3152_i2c1_devices,
 		ARRAY_SIZE(ea3152_i2c1_devices));

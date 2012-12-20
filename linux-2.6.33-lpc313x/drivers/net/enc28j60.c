@@ -12,7 +12,8 @@
  *
  * $Id: enc28j60.c,v 1.22 2007/12/20 10:47:01 claudio Exp $
  */
-
+#include <linux/device.h>
+#include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
@@ -29,8 +30,15 @@
 #include <linux/skbuff.h>
 #include <linux/delay.h>
 #include <linux/spi/spi.h>
-
+#include <mach/gpio.h>
 #include "enc28j60_hw.h"
+
+
+
+/* Gnublin Board fix 
+ * Now it't possible to define a SPI device dynamically
+ */
+struct spi_device *glob_dev;
 
 #define DRV_NAME	"enc28j60"
 #define DRV_VERSION	"1.01"
@@ -42,12 +50,12 @@
 
 /* Buffer size required for the largest SPI transfer (i.e., reading a
  * frame). */
-#define SPI_TRANSFER_BUF_LEN	(4 + MAX_FRAMELEN)
+#define SPI_TRANSFER_BUF_LEN	(4 + MAX_FRAMELEN + 1024)
 
-#define TX_TIMEOUT	(4 * HZ)
+#define TX_TIMEOUT	(20 * HZ)
 
 /* Max TX retries in case of collision as suggested by errata datasheet */
-#define MAX_TX_RETRYCOUNT	16
+#define MAX_TX_RETRYCOUNT	32
 
 enum {
 	RXFILTER_NORMAL,
@@ -1543,6 +1551,12 @@ static const struct net_device_ops enc28j60_netdev_ops = {
 	.ndo_validate_addr	= eth_validate_addr,
 };
 
+ 
+
+
+
+
+
 static int __devinit enc28j60_probe(struct spi_device *spi)
 {
 	struct net_device *dev;
@@ -1645,10 +1659,100 @@ static struct spi_driver enc28j60_driver = {
 	.remove = __devexit_p(enc28j60_remove),
 };
 
+
+
+
+/*
+struct spi_board_info enc28j60_info =
+	{
+		.modalias = "enc28j60",
+		.max_speed_hz = 10000000,
+		.bus_num = 0,
+		.irq = IRQ_GPIO_14,//IRQ_GPIO14
+		.chip_select = 0,
+	};
+*/
+
 static int __init enc28j60_init(void)
 {
-	msec20_to_jiffies = msecs_to_jiffies(20);
+	struct spi_master *spi_master;
+	struct spi_device *spi_device;
+	struct device *pdev;
+	char buff[64];
+	int status = 0;
 
+ 
+
+	spi_master = spi_busnum_to_master(0);
+
+	if (!spi_master) {
+
+	printk(KERN_ALERT "spi_busnum_to_master(%d) returned NULL\n", 0);
+	printk(KERN_ALERT "Missing modprobe omap2_mcspi?\n");
+
+	return -1;
+
+}
+	spi_device = spi_alloc_device(spi_master);
+
+	if (!spi_device) {
+		put_device(&spi_master->dev);
+		printk(KERN_ALERT "spi_alloc_device() failed\n");
+
+	return -1;
+
+	}
+
+ 	/* specify a chip select line */
+	spi_device->chip_select = 0;
+
+
+	/* Check whether this SPI bus.cs is already claimed */
+	snprintf(buff, sizeof(buff), "%s.%u",dev_name(&spi_device->master->dev),spi_device->chip_select);
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+
+	if (pdev) {
+		/* We are not going to use this spi_device, so free it */
+		spi_dev_put(spi_device);
+
+	   /*
+  		* There is already a device configured for this bus.cs combination.
+		* It's okay if it's us. This happens if we previously loaded then
+		* unloaded our driver.
+		* If it is not us, we complain and fail.
+		*/
+		if (pdev->driver && pdev->driver->name &&
+			strcmp(DRV_NAME, pdev->driver->name)) {
+			printk(KERN_ALERT"Driver [%s] already registered for %s\n",pdev->driver->name, buff);
+			status = -1;
+		}
+
+		} else {
+		spi_device->max_speed_hz = 1000000;
+		spi_device->mode = SPI_MODE_0;
+		spi_device->bits_per_word = 8;
+		spi_device->irq = IRQ_GPIO_14;
+		spi_device->controller_state = NULL;
+		spi_device->controller_data = NULL;
+		strlcpy(spi_device->modalias, DRV_NAME, SPI_NAME_SIZE);
+
+		/* Add spi_device to a global pointer
+         * This global pointer can later be easily removed without searching for
+         * the spi_device data
+         */
+		glob_dev = spi_device;
+
+		status = spi_add_device(spi_device);
+
+		if (status < 0) {
+		spi_dev_put(spi_device);
+		printk(KERN_ALERT "spi_add_device() failed: %d\n",status);
+		}
+	}
+ 	put_device(&spi_master->dev);	
+
+	msec20_to_jiffies = msecs_to_jiffies(20);
+	
 	return spi_register_driver(&enc28j60_driver);
 }
 
@@ -1656,6 +1760,39 @@ module_init(enc28j60_init);
 
 static void __exit enc28j60_exit(void)
 {
+	struct spi_master *spi_master;
+	struct spi_device *spi_device;
+	struct device *pdev;
+	char buff[64];
+	
+	
+
+	/* Connect the global spi_dev pointer */
+	spi_device = glob_dev;
+
+	/* Find the correct master with chipselect*/
+	spi_master = spi_busnum_to_master(0);
+
+	printk("dev name = %s\n",dev_name(&spi_master->dev) );
+	
+	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
+
+	/* You have to use the spi_device not the spi_master struct to get the correct
+     * dev.bus pointer
+     */
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+	//printk("\n");
+	if(pdev)
+	{
+		
+		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
+		spi_unregister_device(spi_device);
+	} else {
+		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
+	}
+
+
+		
 	spi_unregister_driver(&enc28j60_driver);
 }
 
