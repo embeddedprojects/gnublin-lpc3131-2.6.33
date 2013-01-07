@@ -1768,9 +1768,17 @@ static void __exit enc28j60_exit(void)
 	
 
 	/* Connect the global spi_dev pointer */
-	spi_device = glob_dev;
+	if(glob_dev != NULL) {
+		spi_device = glob_dev;
+		spi_unregister_device(spi_device);      
+		spi_unregister_driver(&enc28j60_driver);
 
+	} else{
+		spi_unregister_driver(&enc28j60_driver);
+
+	}
 	/* Find the correct master with chipselect*/
+#if 0
 	spi_master = spi_busnum_to_master(0);
 
 	printk("dev name = %s\n",dev_name(&spi_master->dev) );
@@ -1791,9 +1799,7 @@ static void __exit enc28j60_exit(void)
 		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
 	}
 
-
-		
-	spi_unregister_driver(&enc28j60_driver);
+#endif
 }
 
 module_exit(enc28j60_exit);

@@ -356,30 +356,17 @@ static struct resource lpc313x_spi_resources[] = {
 
 static void spi_set_cs_state(int cs_num, int state)
 {
-	/* Only CS0 is supported, so no checks are needed */
-	//(void) cs_num;
 
-#if defined(CONFIG_CS_TO_IO11)
-
-	gpio_set_value(GPIO_GPIO11, state);
-
-
-#elif defined(CONFIG_DUAL_MODE)
-
-	if(cs_num == 1) /* SPI-DEV Chipselect */
+	if(cs_num == 0) /* SPI-DEV Chipselect */
 	{
 		gpio_set_value(GPIO_GPIO11, state);
 	}
 	
-	if(cs_num == 0) /* Chipselect for second device */
+	if(cs_num == 1) /* Chipselect for second device */
 	{
 		gpio_set_value(GPIO_GPIO15, state);
 	}
-#else
 
-	gpio_set_value(GPIO_SPI_CS_OUT0, state);
-
-#endif
 }
 
 struct lpc313x_spics_cfg lpc313x_stdspics_cfg[] =
@@ -419,43 +406,6 @@ static struct platform_device lpc313x_spi_device = {
 };
 
 
-
-#if 0
-static int mcp251x_setup(struct spi_device *spi)
-{
-	return 0;
-}
-
-
-
-static int __init mcp251x_lpc313x_register (void)
-{
-
-  
-  static struct mcp251x_platform_data mcp251x_info = {
-        .oscillator_frequency = 16000000,
-        .board_specific_setup = &mcp251x_setup,
-        .model = CAN_MCP251X_MCP2515,
-        .power_enable = NULL,
-        .transceiver_enable = NULL,
-};
-  
-  
-  struct spi_board_info info = {
-          
-                  .modalias = "mcp251x",
-                  .platform_data = &mcp251x_info,
-                  .irq = IRQ_GPIO_14,
-                  .max_speed_hz = 1000000,
-                  .chip_select = 1,
-		  		  .bus_num = 0,
-          };
-
-   return spi_register_board_info(&info, 1);
-}
-arch_initcall(mcp251x_lpc313x_register);
-
-#endif
 
 
 #if defined(CONFIG_MTD_DATAFLASH)
@@ -551,19 +501,10 @@ static void __init ea313x_init(void)
 	i2c_register_board_info(1, ea313x_i2c_devices,
 	ARRAY_SIZE(ea313x_i2c_devices));
 
-#if defined(CONFIG_DUAL_MODE)	
+
 	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO_11 */
 	GPIO_OUT_HIGH(IOCONF_GPIO,0x200); /* GPIO_15 */
-	GPIO_IN(IOCONF_GPIO,0x400);		 /* GPIO_16 */ 
-#endif
 
-#if defined(CONFIG_CS_TO_IO11)
-GPIO_OUT_HIGH(IOCONF_GPIO,0x20);	 /* GPIO_11 */
-#endif
-
-#if defined(CONFIG_ENC28J60_SPI_DEV)
-GPIO_IN(IOCONF_GPIO,0x100);		 /* GPIO_14 */
-#endif
 
 	
 #if defined(CONFIG_MACH_EA3152)
