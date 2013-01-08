@@ -245,6 +245,7 @@ static inline int lpc313x_gpio_direction_output(struct gpio_chip *chip,
 
 static inline int lpc313x_gpio_get(struct gpio_chip *chip, unsigned offset)
 {
+  
 	struct lpc313x_gpio_chip *pchip = to_lpc313x_gpio(chip);
 
 	return (GPIO_STATE(pchip->regbase) & (1 << offset));
@@ -316,6 +317,11 @@ static inline int lpc313x_gpio_direction_output_p0(struct gpio_chip *chip,
 {
 	int real_offset = gpio_pins_gpio_map[offset];
 
+	if(real_offset == 4){  
+	printk("GPI4 is input only and can not be used as an output!!! \n");  
+	return 0;  
+	}
+
 	if (real_offset >= 0)
 		return lpc313x_gpio_direction_output(chip, real_offset, value);
 	else
@@ -339,6 +345,12 @@ static inline void lpc313x_gpio_set_p0(struct gpio_chip *chip, unsigned offset,
 	struct lpc313x_gpio_chip *pchip = to_lpc313x_gpio(chip);
 	unsigned long flags;
 	int real_offset = gpio_pins_gpio_map[offset];
+	
+	
+	if(real_offset == 4){  
+	printk("GPI4 is input only and can not be used as an output!!! \n");  
+	return;  
+	}
 
 	raw_local_irq_save(flags);
 	if (value)

@@ -1927,7 +1927,7 @@ EXPORT_SYMBOL_GPL(serial8250_modem_status);
  */
 int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 {
-/*	unsigned char status;
+	unsigned char status;
 	unsigned long flags;
 	struct uart_8250_port *up =
 		container_of(port, struct uart_8250_port, port);
@@ -1948,26 +1948,8 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
 		serial8250_tx_chars(up);
 
 	spin_unlock_irqrestore(&up->port.lock, flags);
-	return 1;*/
+	return 1;
 
-unsigned int status;
-unsigned long flags;
-unsigned int istatus;
-
-spin_lock_irqsave(&up->port.lock, flags);
-
-status = serial_inp(up, UART_LSR);
-
-DEBUG_INTR("status = %x...", status);
-
-istatus = (serial_in(up, UART_IIR) >> 1) & 0x7;
-if ((status & UART_LSR_DR) || istatus == 0x06)
-receive_chars(up, &status);
-check_modem_status(up);
-if (status & UART_LSR_THRE)
-transmit_chars(up);
-
-spin_unlock_irqrestore(&up->port.lock, flags);
 
 }
 EXPORT_SYMBOL_GPL(serial8250_handle_irq);
