@@ -1770,11 +1770,12 @@ static void __exit enc28j60_exit(void)
 	/* Connect the global spi_dev pointer */
 	if(glob_dev != NULL) {
 		spi_device = glob_dev;
-		spi_unregister_device(spi_device);      
-		spi_unregister_driver(&enc28j60_driver);
+		spi_unregister_device(spi_device);
+		goto unregister_drv;     
+		
 
 	} else{
-		spi_unregister_driver(&enc28j60_driver);
+		goto unregister_drv; 
 
 	}
 	/* Find the correct master with chipselect*/
@@ -1800,6 +1801,9 @@ static void __exit enc28j60_exit(void)
 	}
 
 #endif
+unregister_drv:
+
+	spi_unregister_driver(&enc28j60_driver);
 }
 
 module_exit(enc28j60_exit);

@@ -785,9 +785,15 @@ static void __exit spidev_exit(void)
 	
 
 	/* Connect the global spi_dev pointer */
-	spi_device = glob_dev;
+	if(glob_dev != NULL) {	
+		spi_device = glob_dev;
+		spi_unregister_device(spi_device);
+		goto register_drv;	
+	} else {
+		goto register_drv;
+	}
 
-
+#if 0
 	/* Find the correct master with chipselect*/
 	spi_master = spi_busnum_to_master(0);
 	printk("dev name = %s\n",dev_name(&spi_master->dev) );
@@ -806,7 +812,8 @@ static void __exit spidev_exit(void)
 	} else {
 		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
 	}	
-
+#endif
+register_drv:
 
 	spi_unregister_driver(&spidev_spi_driver);
 	class_destroy(spidev_class);
