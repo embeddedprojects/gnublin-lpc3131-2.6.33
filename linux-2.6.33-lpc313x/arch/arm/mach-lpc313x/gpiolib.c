@@ -24,6 +24,7 @@
 #include <asm-generic/gpio.h>   /* 2011-12-11, added --hh */
 
 
+
 /* Internal structures */
 
 struct lpc313x_gpio_pin {
@@ -280,6 +281,11 @@ static int lpc313x_gpiolib_direction_output(struct gpio_chip *chip,
 	unsigned port = ((unsigned)pchip->regbase);
 	unsigned pin = (1 << pchip->pins[offset].pin);
 
+	if(pin == 16){  
+	printk("GPI4 is input only and can not be used as an output!!! \n");  
+	return 0;
+	}
+	
 	raw_local_irq_save(flags);
 
 	GPIO_M1_SET(port) = pin;
@@ -301,6 +307,7 @@ static int lpc313x_gpiolib_get(struct gpio_chip *chip, unsigned offset)
 	unsigned port = ((unsigned)pchip->regbase);
 	unsigned pin = (1 << pchip->pins[offset].pin);
 
+
 	if(GPIO_STATE(port) & pin) {
 		return 1;
 	} else {
@@ -317,6 +324,11 @@ static void lpc313x_gpiolib_set(struct gpio_chip *chip,
 	unsigned port = ((unsigned)pchip->regbase);
 	unsigned pin = (1 << pchip->pins[offset].pin);
     
+	if(pin == 16){  
+	printk("GPI4 is input only and can not be used as an output!!! \n");  
+	return;
+	}
+	
 	raw_local_irq_save(flags);
 
 	GPIO_M1_SET(port) = pin;
