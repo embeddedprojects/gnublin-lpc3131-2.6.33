@@ -255,7 +255,8 @@ void __init lpc313x_init_irq(void)
 	}
 
 	/* Now configure external/board interrupts using event router */
-	for (irq = IRQ_EVT_START; irq < NR_IRQS; irq++) {
+	for (irq = IRQ_EVT_START; irq <  NR_IRQS ; irq++) {
+		//if (irq <)
 		/* compute bank & bit position for the event_pin */
 		bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
 		bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
@@ -290,6 +291,9 @@ void __init lpc313x_init_irq(void)
 				break;
 			case EVT_BOTH_EDGE:
 				EVRT_ATR(bank) |= _BIT(bit_pos);
+				set_irq_handler(irq, handle_edge_irq);
+				break;
+			case EVT_STARTUP:
 				set_irq_handler(irq, handle_edge_irq);
 			default:
 				printk("Invalid Event type.\r\n");

@@ -1251,7 +1251,7 @@ static int __init mcp251x_can_init(void)
 		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = IRQ_GPIO_14;
+		spi_device->irq = IRQ_GPIO14;
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		spi_device->dev.platform_data = &mcp251x_info,

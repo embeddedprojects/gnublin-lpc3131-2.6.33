@@ -727,7 +727,7 @@ static int __init spidev_init(void)
 		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = IRQ_GPIO_14;
+		spi_device->irq = IRQ_GPIO14;
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		strlcpy(spi_device->modalias, DRV_NAME, SPI_NAME_SIZE);

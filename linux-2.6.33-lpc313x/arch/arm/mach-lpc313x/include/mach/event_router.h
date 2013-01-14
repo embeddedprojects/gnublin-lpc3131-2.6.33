@@ -165,7 +165,8 @@ typedef enum
   EVT_ACTIVE_HIGH,
   EVT_FALLING_EDGE,
   EVT_RISING_EDGE,
-  EVT_BOTH_EDGE
+  EVT_BOTH_EDGE,
+  EVT_STARTUP /* Startup initialisation event => none --BN */
 } EVENT_TYPE_T;
 
 /* Macros to compute the bank based on EVENT_T */
