@@ -101,6 +101,17 @@ static unsigned bufsiz = 4096;
 module_param(bufsiz, uint, S_IRUGO);
 MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
+/* Additional Modul Parameters for dynamically allozation module load */
+
+static int irq_pin = 90; //gpio_to_irq(GPIO_GPIO14)
+module_param(irq_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter an GPIO_GPIOx id. (E.g. Interrupt for Gpio Pin 14 is number 14)" );
+
+static int cs_pin = 0;
+module_param(cs_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(irq_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)" );
+
+
 /*-------------------------------------------------------------------------*/
 
 /*
@@ -694,7 +705,7 @@ static int __init spidev_init(void)
 
 	/* specify a chip select line */
 
-	spi_device->chip_select = 0;
+	spi_device->chip_select = cs_pin;
 
  
 
@@ -727,7 +738,7 @@ static int __init spidev_init(void)
 		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = IRQ_GPIO14;
+		spi_device->irq = irq_pin;
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		strlcpy(spi_device->modalias, DRV_NAME, SPI_NAME_SIZE);

@@ -349,7 +349,7 @@ static int lpc313x_gpiolib_to_irq(struct gpio_chip *chip, unsigned offset)
 	if(pchip->pins) {
 		int event = pchip->pins[offset].event_id;
 		if(event >= 0) {
-		printk("GPIO_TO_IRQ:GPIO_NAME=%s, GPIO_ID=%d, IRQ_ID=%d",pchip->pins[offset].name, offset, (event + (NR_IRQ_CPU - 1)) );
+		//printk("GPIO_TO_IRQ:GPIO_NAME=%s, GPIO_ID=%d, IRQ_ID=%d\n",pchip->pins[offset].name, offset, (event + (NR_IRQ_CPU - 1)) );
       return (event + (NR_IRQ_CPU - 1) );   
              /* Now IRQ number is correct IRQ = event + NR_IRQ_CPU - 1 --BN */
 		}

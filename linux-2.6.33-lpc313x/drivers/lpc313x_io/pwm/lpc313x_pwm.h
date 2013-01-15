@@ -2,7 +2,7 @@
 #define __LPC313x_PWM_H__
 
 
-#define PWM_AUTHOR        "Michael Schwarz"
+#define PWM_AUTHOR        "2011 Michael Schwarz, 2013 Benedikt Niedermayr <niedermayr@embedded-projects.net>"
 #define PWM_DESCRIPTION   "PWM Driver for GNUBLIN"
 
 #define PWM_PHYS    (0x13009000)

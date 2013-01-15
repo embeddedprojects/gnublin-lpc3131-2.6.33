@@ -6,6 +6,7 @@
  *  Authors:    Nils Stec, "krumeltee", <info@fi-no.de>, (c) 2011,2012     - the kernel module on top of the adc code
  *              Michael Schwarz, (c) 2011                                  - the adc code itself
  *              some module parts are by LKMPG                             - taken from version "2007-05-18 ver 2.6.4"
+ * 				Benedikt Niedermayr (niedermayr@embedded-projects.net)
  *
  * ADC driver for LPC313x (gnublin)
  *
@@ -32,6 +33,8 @@
 #include <linux/fs.h>
 #include <asm/io.h>
 #include <mach/registers.h>
+#include <linux/cdev.h>       /* Support for /sys/class */
+#include <linux/device.h>
 
 #include "lpc313x_adc.h"
 
@@ -39,6 +42,11 @@ static int Major;		/* Major number assigned to our device driver */
 static int Device_Open = 0;	/* Is device open? */
 static char msg[BUF_LEN];	/* The msg the device will give when asked */
 static char *msg_Ptr;
+
+static dev_t driv_number;
+static struct cdev *driv_object;
+static struct class *driv_class;
+static struct device *driv_dev;
 
 static struct file_operations fops = {
 	.read = device_read,
@@ -200,11 +208,26 @@ static int __init mod_init(void) {
 	adc_averaging = 0;
 	adc_averagingloops = 0;
 	
-	Major = register_chrdev(0, DEVICE_NAME, &fops);
-	if (Major < 0) {
-		printk(KERN_ALERT "[lpc313x adc] registering char device failed with %d\n", Major);
-		return Major;
+	/* Driver loading with Sysfs support --BN */
+	if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_adc") < 0 ) return -EIO;
+	driv_object = cdev_alloc(); 
+
+	if( driv_object==NULL)
+	goto free_device_number;
+
+	driv_object->owner = THIS_MODULE;
+	driv_object->ops   = &fops;
+
+
+	driv_class = class_create(THIS_MODULE, "lpc313x_adc");
+	if( IS_ERR(driv_class) ) {
+	pr_err(	"[lpc313x_adc] no sysfs support\n");
+	goto free_cdev;
 	}
+
+
+	driv_dev = device_create(driv_class, NULL, driv_number, NULL, "%s", "lpc313x_adc");
+
 
 	switch(adc_powersave) {
 		case ADC_POWERSAVE_AUTO:
@@ -216,17 +239,29 @@ static int __init mod_init(void) {
 			break;
 	}	
 	
-	printk(KERN_INFO "[lpc313x adc] driver loaded with major %d\n", Major);
-	printk(KERN_INFO "[lpc313x adc] >> $ mknod /dev/%s c %d 0\n", DEVICE_NAME, Major);
+	dev_info(driv_dev, "[lpc313x_adc] driver loaded");
 	
 	return SUCCESS;
+
+
+free_cdev:
+	kobject_put(&driv_object->kobj);
+free_device_number:
+	unregister_chrdev_region(driv_number, 1);
+	return -EIO;
 }
 
 /** called when module unloaded */
 static void __exit mod_exit(void) {
 	lpc313x_deinit_adc();
-	unregister_chrdev(Major, DEVICE_NAME);
-	printk(KERN_INFO "[lpc313x adc] DRIVER UNLOADED\n");
+	
+	device_release_driver(driv_dev);
+	device_destroy(driv_class,driv_number);
+	class_destroy(driv_class);
+	cdev_del(driv_object);
+	unregister_chrdev_region(driv_number,1);
+
+	dev_info(driv_dev, "[lpc313x_adc] driver unloaded");
 }
 
 /* Called when a process closes the device file. */

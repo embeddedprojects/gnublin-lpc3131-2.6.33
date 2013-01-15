@@ -39,7 +39,7 @@
 
 #define DEVICE_NAME	"lpc313x_adc"	/* Dev name as it appears in /proc/devices   */
 #define BUF_LEN 	8		/* length of the receive/send buffer, max 192 byte = 191 chars + trailing zero */
-#define DRIVER_AUTHOR	"2011 Nils Stec \"krumeltee\" <info@fi-no.de>, 2011 Michael Schwarz"
+#define DRIVER_AUTHOR	"2011 Nils Stec \"krumeltee\" <info@fi-no.de>, 2011 Michael Schwarz, 2013 Benedikt Niedermayr <niedermayr@embedded-projects.net>"
 #define DRIVER_DESC	"lpc313x adc driver for gnublin"
 
 /* if you haven't applied the adc-registers patch, you will need these defines. */
