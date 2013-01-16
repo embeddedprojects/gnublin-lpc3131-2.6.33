@@ -2,4 +2,16 @@
 
 
 path1=$(pwd)
-make zImage && make modules && make modules_install INSTALL_MOD_PATH=/media/258ab758-e063-41ba-b6aa-50ba495deea4 && cp arch/arm/boot/zImage /media/258ab758-e063-41ba-b6aa-50ba495deea4/
+path2="$1"
+
+make zImage
+make modules
+sudo rm -r /home/brenson/tmp/modules_install/*
+make modules_install INSTALL_MOD_PATH=/home/brenson/tmp/modules_install
+
+sudo cp -r "/home/brenson/tmp/modules_install/lib" "${path2}"
+sudo cp arch/arm/boot/zImage "${path2}"
+sleep 1
+sudo sync
+sleep 1
+sudo umount "${path2}"

@@ -165,23 +165,17 @@ static struct irq_chip lpc313x_evtr_chip = {
 
 #define ROUTER_HDLR(n) \
 	static void router##n##_handler (unsigned int irq, struct irq_desc *desc) { \
-		u32 status, bank, bit_pos; \
-		if (IRQ_EVTR##n##_START == IRQ_EVTR##n##_END) { \
-			/* translate IRQ number */ \
-			irq = IRQ_EVTR##n##_START; \
-			generic_handle_irq(irq); \
-		} else { \
-			for (irq = IRQ_EVTR##n##_START; irq <= IRQ_EVTR##n##_END; irq++) {  \
-				/* compute bank & bit position for the event_pin */ \
-				bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin); \
-				bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F; \
-				status = EVRT_OUT_PEND(n, bank); \
-				if (status & _BIT(bit_pos)) \
-					generic_handle_irq(irq); \
+		u32 evt, bank, bit_pos, status; \
+		for(irq = IRQ_EVTR##n##_START; irq <= IRQ_EVTR##n##_END; irq++) { \
+			evt = irq_to_evt(irq); \
+			bank = EVT_GET_BANK(evt); \
+			bit_pos = evt & 0x1F; \
+			status = EVRT_OUT_PEND(n, bank); \
+			if (status & _BIT(bit_pos)) { \
+				generic_handle_irq(irq); \
 			} \
 		} \
 	}
-
 
 #if IRQ_EVTR0_END
 ROUTER_HDLR(0)
@@ -258,10 +252,11 @@ void __init lpc313x_init_irq(void)
 		bank = EVT_GET_BANK(irq_to_evt(irq));	
 		bit_pos = irq_to_evt(irq) & 0x1F ;
 		
-		printk("irq=%d Event=0x%x bank:%d bit:%d type:none\r\n", irq,
+		/* printk("irq=%d Event=0x%x bank:%d bit:%d type:none\r\n", irq,
 			irq_to_evt(irq), bank,
 			bit_pos);
-		
+		*/
+
 		set_irq_chip(irq, &lpc313x_evtr_chip);
 		set_irq_flags(irq, IRQF_VALID);
 		set_irq_handler(irq, handle_level_irq);
@@ -271,8 +266,9 @@ void __init lpc313x_init_irq(void)
 		
 	}
 	
+
 	/* Now configure extra mapped events */
-	for (i = 0; i <  NR_STARTUP_BOARD_IRQS - 1 ; i++) {
+	for (i = 0; i <  NR_STARTUP_BOARD_IRQS  ; i++) {
 		
 		
 		/* compute bank & bit position for the event_pin */
@@ -290,18 +286,24 @@ void __init lpc313x_init_irq(void)
 		switch (irq_2_event[i].type) {
 			case EVT_ACTIVE_LOW:
 				set_irq_type(irq, IRQ_TYPE_LEVEL_LOW);
+				break;
 			case EVT_ACTIVE_HIGH:
 				set_irq_type(irq, IRQ_TYPE_LEVEL_HIGH);
+				break;
 			case EVT_FALLING_EDGE:
 				set_irq_type(irq, IRQ_TYPE_EDGE_FALLING);
+				break;
 			case EVT_RISING_EDGE:
 				set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
+				break;
 			case EVT_BOTH_EDGE:
 				set_irq_type(irq, IRQ_TYPE_EDGE_BOTH);
 			default:
 				printk("Invalid Event type.\r\n");
 				break;
 		}
+		
+
 		if ( (irq >= IRQ_EVTR0_START) && (irq <= IRQ_EVTR0_END) ) {
 			/* enable routing to vector 0 */
 			EVRT_OUT_MASK_SET(0, bank) = _BIT(bit_pos);

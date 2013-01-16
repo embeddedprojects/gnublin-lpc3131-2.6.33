@@ -228,13 +228,13 @@ static int lpc313x_mcp251x_setup (struct spi_device *spi)
   
 /* Additional Modul Parameters for dynamically allozation module load */
 
-static int irq_pin = 90; //gpio_to_irq(GPIO_GPIO14)
+static int irq_pin = 14; 
 module_param(irq_pin, int, S_IRUGO|S_IWUSR);
-MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter an GPIO_GPIOx id. (E.g. Interrupt for Gpio Pin 14 is number 14)");
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
 
 static int cs_pin = 0;
 module_param(cs_pin, int, S_IRUGO|S_IWUSR);
-MODULE_PARM_DESC(irq_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)");
+MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)");
 /*END*/ 
 
 

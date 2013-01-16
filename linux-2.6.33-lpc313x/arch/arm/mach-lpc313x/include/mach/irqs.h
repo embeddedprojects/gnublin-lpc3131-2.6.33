@@ -112,11 +112,11 @@
 #endif
 
 /* now compute the board start IRQ number */
-#define IRQ_BOARD_START   (NR_IRQ_CPU + NR_IRQ_CHIP_EVT)
+#define IRQ_BOARD_START   (NR_IRQ_CPU + NR_STARTUP_BOARD_IRQS)
 
 /* Route all internal chip events to IRQ_EVT_ROUTER0 */
-#define IRQ_EVTR0_START        IRQ_EVT_START
-#define IRQ_EVTR0_END          (IRQ_BOARD_START - 1)
+#define IRQ_EVTR0_START        NR_IRQ_CPU
+#define IRQ_EVTR0_END          (NR_IRQ_CPU + 31)
 
 
 #if defined (CONFIG_MACH_VAL3153) 
@@ -146,7 +146,7 @@
 
 
 #elif defined (CONFIG_MACH_EA313X) || defined(CONFIG_MACH_EA3152)
-# define IRQ_DM9000_ETH_INT   IRQ_BOARD_START	/* Ethernet chip */
+# define IRQ_DM9000_ETH_INT   IRQ_BOARD_START		/* Ethernet chip */
 # define IRQ_SDMMC_CD         (IRQ_BOARD_START + 1)	/* SD card detect */
 # define IRQ_EA_VBUS_OVRC     (IRQ_BOARD_START + 2)	/* Over current indicator */
 # define NR_IRQ_BOARD         3
@@ -165,12 +165,12 @@
    IRQ_EVT_ROUTERx IRQ is generated when event in the corresponding 
    group triggers.
 */
-#define IRQ_EVTR1_START        IRQ_DM9000_ETH_INT
-#define IRQ_EVTR1_END          IRQ_DM9000_ETH_INT
-#define IRQ_EVTR2_START        IRQ_SDMMC_CD
-#define IRQ_EVTR2_END          IRQ_SDMMC_CD
-#define IRQ_EVTR3_START        IRQ_EA_VBUS_OVRC
-#define IRQ_EVTR3_END          IRQ_EA_VBUS_OVRC
+#define IRQ_EVTR1_START        (IRQ_EVTR0_END + 1)
+#define IRQ_EVTR1_END          (IRQ_EVTR1_START + 31)
+#define IRQ_EVTR2_START        (IRQ_EVTR1_END + 1)
+#define IRQ_EVTR2_END          (IRQ_EVTR2_START + 31)
+#define IRQ_EVTR3_START        (IRQ_EVTR2_END + 1)
+#define IRQ_EVTR3_END          (IRQ_EVTR3_START + 29)
 
 #elif defined (CONFIG_MACH_VAL3154)
 # define IRQ_SDMMC_CD	 IRQ_BOARD_START 	/* SD card detect */

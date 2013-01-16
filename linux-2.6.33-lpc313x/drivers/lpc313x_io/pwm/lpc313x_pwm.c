@@ -127,7 +127,7 @@ int __init init_pwm(void) {
 	}
 
 
-	 driv_dev = device_create(driv_class, NULL, driv_number, NULL, "%s", "lpc313x_adc");
+	 driv_dev = device_create(driv_class, NULL, driv_number, NULL, "%s", "lpc313x_pwm");
 
 
  	pwm_value = 0; 
