@@ -254,47 +254,50 @@ void __init lpc313x_init_irq(void)
 		set_irq_flags(irq, IRQF_VALID);
 	}
 
-	/* Now configure external/board interrupts using event router */
-	for (irq = IRQ_EVT_START; irq <  NR_IRQS ; irq++) {
-		//if (irq <)
-		/* compute bank & bit position for the event_pin */
-		bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-		bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	for(irq = NR_IRQ_CPU; irq <  NR_IRQS ; irq++) {
+		bank = EVT_GET_BANK(irq_to_evt(irq));	
+		bit_pos = irq_to_evt(irq) & 0x1F ;
 		
-		printk("irq=%d Event=0x%x bank:%d bit:%d type:%d\r\n", irq,
-			irq_2_event[irq - IRQ_EVT_START].event_pin, bank,
-			bit_pos, irq_2_event[irq - IRQ_EVT_START].type);
-
+		printk("irq=%d Event=0x%x bank:%d bit:%d type:none\r\n", irq,
+			irq_to_evt(irq), bank,
+			bit_pos);
+		
 		set_irq_chip(irq, &lpc313x_evtr_chip);
 		set_irq_flags(irq, IRQF_VALID);
-		/* configure the interrupt senstivity */
-		switch (irq_2_event[irq - IRQ_EVT_START].type) {
+		set_irq_handler(irq, handle_level_irq);
+		/* Set event router event to none */
+
+
+		
+	}
+	
+	/* Now configure extra mapped events */
+	for (i = 0; i <  NR_STARTUP_BOARD_IRQS - 1 ; i++) {
+		
+		
+		/* compute bank & bit position for the event_pin */
+		irq = irq_2_event[i].irq;
+		bank = EVT_GET_BANK(irq_2_event[i].event_pin);
+		bit_pos = irq_2_event[i].event_pin & 0x1F;
+		
+
+		printk("irq=%d Event=0x%x bank:%d bit:%d type:%d\r\n",irq,
+			irq_2_event[i].event_pin, bank,
+			bit_pos, irq_2_event[i].type);
+
+
+		/* configure the interrupt trigger level */
+		switch (irq_2_event[i].type) {
 			case EVT_ACTIVE_LOW:
-				EVRT_APR(bank) &= ~_BIT(bit_pos);
-				EVRT_ATR(bank) &= ~_BIT(bit_pos);
-				set_irq_handler(irq, handle_level_irq);
-				break;
+				set_irq_type(irq, IRQ_TYPE_LEVEL_LOW);
 			case EVT_ACTIVE_HIGH:
-				EVRT_APR(bank) |= _BIT(bit_pos);
-				EVRT_ATR(bank) &= ~_BIT(bit_pos);
-				set_irq_handler(irq, handle_level_irq);
-				break;
+				set_irq_type(irq, IRQ_TYPE_LEVEL_HIGH);
 			case EVT_FALLING_EDGE:
-				EVRT_APR(bank) &= ~_BIT(bit_pos);
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
-				break;
+				set_irq_type(irq, IRQ_TYPE_EDGE_FALLING);
 			case EVT_RISING_EDGE:
-				EVRT_APR(bank) |= _BIT(bit_pos);
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
-				break;
+				set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
 			case EVT_BOTH_EDGE:
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
-				break;
-			case EVT_STARTUP:
-				set_irq_handler(irq, handle_edge_irq);
+				set_irq_type(irq, IRQ_TYPE_EDGE_BOTH);
 			default:
 				printk("Invalid Event type.\r\n");
 				break;
