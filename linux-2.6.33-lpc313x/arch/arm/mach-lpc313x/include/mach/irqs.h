@@ -75,6 +75,7 @@
 #define IRQ_GPIO_14	   34
 #define IRQ_I2C1_SDA   35
 #define IRQ_GPIO_16	   36
+#define IRQ_GPIO_11	   3
 
 #define _INTERNAL_IRQ_EVENT_MAP	\
 	{IRQ_WDT, EVT_wdog_m0, EVT_RISING_EDGE}, \
