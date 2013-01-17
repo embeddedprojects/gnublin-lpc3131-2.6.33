@@ -70,7 +70,6 @@
  *
  * No define all other possible event router events as interrupts
  */
-<<<<<<< HEAD
 #define evt_to_irq(evt)		(evt + 30)
 #define irq_to_evt(irq)		(irq - 30)
 
