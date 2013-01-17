@@ -69,7 +69,7 @@ typedef enum _EVT_TYPE_
   EVT_EBI_D_12,
   EVT_EBI_D_13,
   EVT_EBI_D_14,
-  EVT_EBI_D_15,
+  EVT_EBI_D_15,    /*40*/
   EVT_EBI_NWE,
   EVT_EBI_A_0_ALE,
   EVT_EBI_A_1_CLE,
@@ -87,7 +87,7 @@ typedef enum _EVT_TYPE_
   EVT_mGPIO8,
   EVT_mGPIO9,
   EVT_mGPIO10,
-  EVT_GPIO11,
+  EVT_GPIO11,  /*58*/
   EVT_GPIO12,
   EVT_GPIO13,
   EVT_GPIO14,
@@ -125,8 +125,8 @@ typedef enum _EVT_TYPE_
   EVT_I2C_SDA1,
   EVT_I2C_SCL1,
   EVT_PWM_DATA,
-  EVT_AD_NINT_I,
-  EVT_PLAY_DET_I,
+  EVT_GPIO19,  /* NOT correct: EVT_AD_NINT_I */
+  EVT_GPIO20, /* NOT correct: EVT_PLAY_DET_I,     DATASHEET  Page 326  --BN */
   EVT_timer0_intct1,
   EVT_timer1_intct1,
   EVT_timer2_intct1,

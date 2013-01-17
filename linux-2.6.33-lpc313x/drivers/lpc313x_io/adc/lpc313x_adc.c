@@ -38,7 +38,6 @@
 
 #include "lpc313x_adc.h"
 
-static int Major;		/* Major number assigned to our device driver */
 static int Device_Open = 0;	/* Is device open? */
 static char msg[BUF_LEN];	/* The msg the device will give when asked */
 static char *msg_Ptr;
@@ -209,7 +208,7 @@ static int __init mod_init(void) {
 	adc_averagingloops = 0;
 	
 	/* Driver loading with Sysfs support --BN */
-	if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_adc") < 0 ) return -EIO;
+	if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_adc_dev") < 0 ) return -EIO;
 	driv_object = cdev_alloc(); 
 
 	if( driv_object==NULL)
@@ -218,6 +217,8 @@ static int __init mod_init(void) {
 	driv_object->owner = THIS_MODULE;
 	driv_object->ops   = &fops;
 
+	if( cdev_add(driv_object,driv_number,1))
+	goto free_cdev;
 
 	driv_class = class_create(THIS_MODULE, "lpc313x_adc");
 	if( IS_ERR(driv_class) ) {
@@ -239,7 +240,7 @@ static int __init mod_init(void) {
 			break;
 	}	
 	
-	dev_info(driv_dev, "[lpc313x_adc] driver loaded");
+	dev_info(driv_dev, "[lpc313x_adc] driver loaded\n");
 	
 	return SUCCESS;
 
@@ -261,7 +262,7 @@ static void __exit mod_exit(void) {
 	cdev_del(driv_object);
 	unregister_chrdev_region(driv_number,1);
 
-	dev_info(driv_dev, "[lpc313x_adc] driver unloaded");
+	dev_info(driv_dev, "[lpc313x_adc] driver unloaded\n");
 }
 
 /* Called when a process closes the device file. */

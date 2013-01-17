@@ -389,6 +389,12 @@ struct lpc313x_spics_cfg lpc313x_stdspics_cfg[] =
 		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
 		.spi_cs_set	= spi_set_cs_state,
 	},
+	[2] =
+	{
+		.spi_spo	= 0, /* Low clock between transfers */
+		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
+		.spi_cs_set	= spi_set_cs_state,
+	},
 };
 
 struct lpc313x_spi_cfg lpc313x_spidata =
@@ -507,8 +513,9 @@ static void __init ea313x_init(void)
 	ARRAY_SIZE(ea313x_i2c_devices));
 
 
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO_11 */
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x200); /* GPIO_15 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO11 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x200); /* GPIO15 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,0x2000); /* GPIO19 */
 
 
 	

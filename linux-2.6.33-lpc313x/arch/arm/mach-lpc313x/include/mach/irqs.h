@@ -80,10 +80,10 @@
 #define IRQ_USB_VBUS			evt_to_irq(EVT_USB_VBUS)				/* VBUS power enable */
 #define IRQ_usb_otg_vbus_pwr_en	evt_to_irq(EVT_usb_otg_vbus_pwr_en)		/* Detect VBUS over current - Host mode */
 #define IRQ_USB_ID				evt_to_irq(EVT_USB_ID)					/* Detect ID pin change - OTG */
+#define IRQ_GPIO11				evt_to_irq(EVT_GPIO11)
 
 
-
-#define NR_STARTUP_BOARD_IRQS 		4
+#define NR_STARTUP_BOARD_IRQS 		7
 
 #define _INTERNAL_IRQ_EVENT_MAP	\
 	{IRQ_wdog_m0, EVT_wdog_m0, EVT_RISING_EDGE}, \
@@ -146,9 +146,9 @@
 
 
 #elif defined (CONFIG_MACH_EA313X) || defined(CONFIG_MACH_EA3152)
-# define IRQ_DM9000_ETH_INT   IRQ_BOARD_START		/* Ethernet chip */
-# define IRQ_SDMMC_CD         (IRQ_BOARD_START + 1)	/* SD card detect */
-# define IRQ_EA_VBUS_OVRC     (IRQ_BOARD_START + 2)	/* Over current indicator */
+# define IRQ_DM9000_ETH_INT   evt_to_irq(EVT_mNAND_RYBN3)		/* Ethernet chip */
+# define IRQ_SDMMC_CD         evt_to_irq(EVT_mNAND_RYBN2)		/* SD card detect */
+# define IRQ_EA_VBUS_OVRC     evt_to_irq(EVT_I2SRX_WS0)			/* Over current indicator */
 # define NR_IRQ_BOARD         3
 
 /* now define board irq to event pin map */

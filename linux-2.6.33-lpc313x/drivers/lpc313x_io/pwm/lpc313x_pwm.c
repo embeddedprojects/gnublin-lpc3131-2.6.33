@@ -35,8 +35,6 @@
 #include "lpc313x_pwm.h"
 
 static int pwm_value = 0;
-
-static int dev_major = 0;
 static int dev_open = 0; 
 
 static dev_t driv_number;
@@ -110,7 +108,7 @@ int __init init_pwm(void) {
  PWM_CNTL_REG = PWM_CNTL_DEFAULT;
  
 	/* Driver loading with Sysfs support --BN */
-    if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_pwm") < 0 ) return -EIO;
+    if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_pwm_dev") < 0 ) return -EIO;
 		driv_object = cdev_alloc(); 
 
 	if( driv_object==NULL)
@@ -119,7 +117,9 @@ int __init init_pwm(void) {
 	driv_object->owner = THIS_MODULE;
 	driv_object->ops   = &fops;
 
-
+	if( cdev_add(driv_object,driv_number,1))
+	goto free_cdev;
+	
 	driv_class = class_create(THIS_MODULE, "lpc313x_pwm");
 	if( IS_ERR(driv_class) ) {
 		pr_err(	"[lpc313x_pwm] no sysfs support\n");
@@ -131,7 +131,7 @@ int __init init_pwm(void) {
 
 
  	pwm_value = 0; 
- 	dev_info(driv_dev, "[lpc313x_pwm] driver loaded");
+ 	dev_info(driv_dev, "[lpc313x_pwm] driver loaded\n");
  return 0;
 
 
@@ -155,7 +155,7 @@ void __exit cleanup_pwm(void) {
  cdev_del(driv_object);
  unregister_chrdev_region(driv_number,1);
 
- dev_info(driv_dev, "[lpc313x_pwm] driver unloaded");
+ dev_info(driv_dev, "[lpc313x_pwm] driver unloaded\n");
 }
 
 

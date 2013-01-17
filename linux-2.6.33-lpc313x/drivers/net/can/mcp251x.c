@@ -1285,7 +1285,7 @@ static void __exit mcp251x_can_exit(void)
 	
 	
 
-	/* Connect the global spi_dev pointer */
+	/* Connect the global spi_dev pointer --BN */
 	if(glob_dev != NULL) {	
 		spi_device = glob_dev;
 		spi_unregister_device(spi_device);
@@ -1293,34 +1293,14 @@ static void __exit mcp251x_can_exit(void)
 	} else {
 		goto register_drv;
 	}
-#if 0
 
-	/* Find the correct master with chipselect*/
-	spi_master = spi_busnum_to_master(0);
-	printk("dev name = %s\n",dev_name(&spi_master->dev) );
-
-	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
-
-	/* You have to use the spi_device not the spi_master struct to get the correct
-     * dev.bus pointer
-     */
-	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
-
-	if(pdev)
-	{
-		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
-		spi_unregister_device(spi_device);
-	} else {
-		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
-	}	
-#endif
 register_drv:
 
 	spi_unregister_driver(&mcp251x_can_driver);
 }
 
-module_init(mcp251x_can_init);
-module_exit(mcp251x_can_exit);
+module_init( mcp251x_can_init );
+module_exit( mcp251x_can_exit );
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");
