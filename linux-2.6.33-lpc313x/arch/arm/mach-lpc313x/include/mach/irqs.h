@@ -75,7 +75,6 @@
 #define IRQ_GPIO_14	   34
 #define IRQ_I2C1_SDA   35
 #define IRQ_GPIO_16	   36
-#define IRQ_GPIO_11	   3
 
 #define _INTERNAL_IRQ_EVENT_MAP	\
 	{IRQ_WDT, EVT_wdog_m0, EVT_RISING_EDGE}, \
@@ -85,7 +84,6 @@
 	{IRQ_GPIO_14, EVT_GPIO14, EVT_FALLING_EDGE}, \
 	{IRQ_I2C1_SDA, EVT_I2C_SDA1, EVT_ACTIVE_LOW}, \
 	{IRQ_GPIO_16, EVT_GPIO16, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO_11, EVT_GPIO11, EVT_FALLING_EDGE}, \
 	
 #if defined(CONFIG_LPC3152_AD)
 /* For chips with analog die there are some more AD events routed
