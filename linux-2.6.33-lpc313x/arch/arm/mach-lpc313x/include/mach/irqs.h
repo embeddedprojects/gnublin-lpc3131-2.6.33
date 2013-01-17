@@ -80,9 +80,17 @@
 #define IRQ_USB_VBUS			evt_to_irq(EVT_USB_VBUS)				/* VBUS power enable */
 #define IRQ_usb_otg_vbus_pwr_en	evt_to_irq(EVT_usb_otg_vbus_pwr_en)		/* Detect VBUS over current - Host mode */
 #define IRQ_USB_ID				evt_to_irq(EVT_USB_ID)					/* Detect ID pin change - OTG */
+#define IRQ_GPIO11				evt_to_irq(EVT_GPIO11)
 
 
 #define NR_STARTUP_BOARD_IRQS 		7
+
+#define _INTERNAL_IRQ_EVENT_MAP	\
+	{IRQ_wdog_m0, EVT_wdog_m0, EVT_RISING_EDGE}, \
+	{IRQ_USB_VBUS, EVT_USB_VBUS, EVT_FALLING_EDGE}, \
+	{IRQ_usb_otg_vbus_pwr_en, EVT_usb_otg_vbus_pwr_en, EVT_FALLING_EDGE}, \
+	{IRQ_USB_ID, EVT_USB_ID, EVT_ACTIVE_LOW}, \
+
 #if defined(CONFIG_LPC3152_AD)
 /* For chips with analog die there are some more AD events routed
  * through event router.
