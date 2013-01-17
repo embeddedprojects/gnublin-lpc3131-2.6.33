@@ -101,6 +101,16 @@ static unsigned bufsiz = 4096;
 module_param(bufsiz, uint, S_IRUGO);
 MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
+/* Additional Modul Parameters for dynamically allozation module load */
+static int irq_pin = 14; 
+module_param(irq_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
+
+static int cs_pin = 0;
+module_param(cs_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)" );
+
+
 /*-------------------------------------------------------------------------*/
 
 /*
@@ -694,7 +704,7 @@ static int __init spidev_init(void)
 
 	/* specify a chip select line */
 
-	spi_device->chip_select = 0;
+	spi_device->chip_select = cs_pin;
 
  
 
@@ -718,7 +728,7 @@ static int __init spidev_init(void)
 		if (pdev->driver && pdev->driver->name &&
 			strcmp(DRV_NAME, pdev->driver->name)) {
 
-			printk(KERN_ALERT"Driver [%s] already registered for %s\n",pdev->driver->name, buff);
+			printk(KERN_ALERT "Driver [%s] already registered for %s\n",pdev->driver->name, buff);
 			status2 = -1;
 		}
 
@@ -727,7 +737,7 @@ static int __init spidev_init(void)
 		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = IRQ_GPIO_14;
+		spi_device->irq = gpio_to_irq(irq_pin);
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		strlcpy(spi_device->modalias, DRV_NAME, SPI_NAME_SIZE);
@@ -780,11 +790,9 @@ static void __exit spidev_exit(void)
 	struct spi_master *spi_master;
 	struct spi_device *spi_device;
 	struct device *pdev;
-	char buff[64];
-	
 	
 
-	/* Connect the global spi_dev pointer */
+	/* Connect the global spi_dev pointer --BN */
 	if(glob_dev != NULL) {	
 		spi_device = glob_dev;
 		spi_unregister_device(spi_device);
@@ -793,26 +801,7 @@ static void __exit spidev_exit(void)
 		goto register_drv;
 	}
 
-#if 0
-	/* Find the correct master with chipselect*/
-	spi_master = spi_busnum_to_master(0);
-	printk("dev name = %s\n",dev_name(&spi_master->dev) );
 
-	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
-
-	/* You have to use the spi_device not the spi_master struct to get the correct
-     * dev.bus pointer
-     */
-	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
-
-	if(pdev)
-	{
-		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
-		spi_unregister_device(spi_device);
-	} else {
-		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
-	}	
-#endif
 register_drv:
 
 	spi_unregister_driver(&spidev_spi_driver);

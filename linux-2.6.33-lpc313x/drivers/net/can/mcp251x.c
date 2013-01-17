@@ -226,18 +226,16 @@ static int lpc313x_mcp251x_setup (struct spi_device *spi)
         .transceiver_enable = NULL,
 };
   
- /* 
-  struct spi_board_info info = {
-          
-                  .modalias = "mcp251x",
-                  .platform_data = &mcp251x_info,
-                  .irq = IRQ_GPIO_14,
-                  .max_speed_hz = 1000000,
-                  .chip_select = 0,
-                  .bus_num = 0
-          };
+/* Additional Modul Parameters for dynamically allozation module load */
 
-*/
+static int irq_pin = 14; 
+module_param(irq_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
+
+static int cs_pin = 0;
+module_param(cs_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)");
+/*END*/ 
 
 
 static int mcp251x_enable_dma; /* Enable SPI DMA. Default: 0 (Off) */
@@ -1218,7 +1216,7 @@ static int __init mcp251x_can_init(void)
 
 	/* specify a chip select line */
 
-	spi_device->chip_select = 0;
+	spi_device->chip_select = cs_pin;
 
  
 
@@ -1251,7 +1249,7 @@ static int __init mcp251x_can_init(void)
 		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = IRQ_GPIO_14;
+		spi_device->irq = irq_pin;
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		spi_device->dev.platform_data = &mcp251x_info,
@@ -1287,7 +1285,7 @@ static void __exit mcp251x_can_exit(void)
 	
 	
 
-	/* Connect the global spi_dev pointer */
+	/* Connect the global spi_dev pointer --BN */
 	if(glob_dev != NULL) {	
 		spi_device = glob_dev;
 		spi_unregister_device(spi_device);
@@ -1295,34 +1293,14 @@ static void __exit mcp251x_can_exit(void)
 	} else {
 		goto register_drv;
 	}
-#if 0
 
-	/* Find the correct master with chipselect*/
-	spi_master = spi_busnum_to_master(0);
-	printk("dev name = %s\n",dev_name(&spi_master->dev) );
-
-	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
-
-	/* You have to use the spi_device not the spi_master struct to get the correct
-     * dev.bus pointer
-     */
-	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
-
-	if(pdev)
-	{
-		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
-		spi_unregister_device(spi_device);
-	} else {
-		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
-	}	
-#endif
 register_drv:
 
 	spi_unregister_driver(&mcp251x_can_driver);
 }
 
-module_init(mcp251x_can_init);
-module_exit(mcp251x_can_exit);
+module_init( mcp251x_can_init );
+module_exit( mcp251x_can_exit );
 
 MODULE_AUTHOR("Chris Elston <celston@katalix.com>, "
 	      "Christian Pellegrin <chripell@evolware.org>");

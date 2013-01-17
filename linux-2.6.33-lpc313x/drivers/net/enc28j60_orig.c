@@ -19,7 +19,6 @@
 #include <linux/types.h>
 #include <linux/fcntl.h>
 #include <linux/interrupt.h>
-#include <linux/irq.h>
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/errno.h>
@@ -69,7 +68,7 @@ enum {
 
 static int irq_pin = 14; 
 module_param(irq_pin, int, S_IRUGO|S_IWUSR);
-MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO< x > id");
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
 
 static int cs_pin = 0;
 module_param(cs_pin, int, S_IRUGO|S_IWUSR);
@@ -1615,7 +1614,7 @@ static int __devinit enc28j60_probe(struct spi_device *spi)
 	/* Board setup must set the relevant edge trigger type;
 	 * level triggers won't currently work.
 	 */
-	ret = request_irq(spi->irq, enc28j60_irq, IRQ_TYPE_EDGE_FALLING, DRV_NAME, priv);
+	ret = request_irq(spi->irq, enc28j60_irq, 0, DRV_NAME, priv);
 	if (ret < 0) {
 		if (netif_msg_probe(priv))
 			dev_err(&spi->dev, DRV_NAME ": request irq %d failed "
@@ -1777,8 +1776,11 @@ static void __exit enc28j60_exit(void)
 	struct spi_master *spi_master;
 	struct spi_device *spi_device;
 	struct device *pdev;
+	char buff[64];
+	
+	
 
-	/* Connect the global spi_dev pointer --BN */
+	/* Connect the global spi_dev pointer */
 	if(glob_dev != NULL) {
 		spi_device = glob_dev;
 		spi_unregister_device(spi_device);
@@ -1789,7 +1791,29 @@ static void __exit enc28j60_exit(void)
 		goto unregister_drv; 
 
 	}
+	/* Find the correct master with chipselect*/
+#if 0
+	spi_master = spi_busnum_to_master(0);
+
+	printk("dev name = %s\n",dev_name(&spi_master->dev) );
 	
+	snprintf(buff, sizeof(buff), "%s.0", dev_name(&spi_device->master->dev));
+
+	/* You have to use the spi_device not the spi_master struct to get the correct
+     * dev.bus pointer
+     */
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+	//printk("\n");
+	if(pdev)
+	{
+		
+		printk("[%s] Recent loaded ressources found = %s\n",pdev->driver->name,buff);
+		spi_unregister_device(spi_device);
+	} else {
+		printk("[%s] Recent loaded ressources not found = %s\n", pdev->driver->name, buff);
+	}
+
+#endif
 unregister_drv:
 
 	spi_unregister_driver(&enc28j60_driver);

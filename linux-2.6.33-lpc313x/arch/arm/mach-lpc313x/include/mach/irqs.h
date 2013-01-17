@@ -67,33 +67,29 @@
 /* Other chip IRQs routed through event router.
  * These IRQs should be treated as board IRQs but they are
  * common for all boards.
+ *
+ * No define all other possible event router events as interrupts
  */
-#define IRQ_WDT        30  /* Watchdog interrupt */
-#define IRQ_VBUS_EN    31  /* VBUS power enable */
-#define IRQ_VBUS_OVRC  32  /* Detect VBUS over current - Host mode */
-#define IRQ_USB_ID     33  /* Detect ID pin change - OTG */
-#define IRQ_GPIO_14	   34
-#define IRQ_I2C1_SDA   35
-#define IRQ_GPIO_16	   36
-#define IRQ_GPIO_11	   3
+#define evt_to_irq(evt)		(evt + 30)
+#define irq_to_evt(irq)		(irq - 30)
 
-#define _INTERNAL_IRQ_EVENT_MAP	\
-	{IRQ_WDT, EVT_wdog_m0, EVT_RISING_EDGE}, \
-	{IRQ_VBUS_EN, EVT_usb_otg_vbus_pwr_en, EVT_FALLING_EDGE}, \
-	{IRQ_VBUS_OVRC, EVT_USB_VBUS, EVT_FALLING_EDGE}, \
-	{IRQ_USB_ID, EVT_USB_ID, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO_14, EVT_GPIO14, EVT_FALLING_EDGE}, \
-	{IRQ_I2C1_SDA, EVT_I2C_SDA1, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO_16, EVT_GPIO16, EVT_ACTIVE_LOW}, \
-	{IRQ_GPIO_11, EVT_GPIO11, EVT_FALLING_EDGE}, \
-	
+
+
+
+#define IRQ_wdog_m0				evt_to_irq(EVT_wdog_m0)					/* Watchdog interrupt */
+#define IRQ_USB_VBUS			evt_to_irq(EVT_USB_VBUS)				/* VBUS power enable */
+#define IRQ_usb_otg_vbus_pwr_en	evt_to_irq(EVT_usb_otg_vbus_pwr_en)		/* Detect VBUS over current - Host mode */
+#define IRQ_USB_ID				evt_to_irq(EVT_USB_ID)					/* Detect ID pin change - OTG */
+
+
+#define NR_STARTUP_BOARD_IRQS 		7
 #if defined(CONFIG_LPC3152_AD)
 /* For chips with analog die there are some more AD events routed
  * through event router.
  */
 #define IRQ_RTC	        34
 #define IRQ_PLAY        35
-#define NR_IRQ_CHIP_EVT	6
+#define NR_IRQ_CHIP_EVT	NR_STARTUP_BOARD_IRQS
 
 #define AD_IRQ_EVENT_MAP	\
 	{IRQ_RTC, EVT_AD_NINT_I, EVT_ACTIVE_LOW}, \
@@ -104,15 +100,15 @@
 
 #else
 #define CHIP_IRQ_EVENT_MAP   _INTERNAL_IRQ_EVENT_MAP
-#define NR_IRQ_CHIP_EVT	     7
+#define NR_IRQ_CHIP_EVT	     4
 #endif
 
 /* now compute the board start IRQ number */
-#define IRQ_BOARD_START   (NR_IRQ_CPU + NR_IRQ_CHIP_EVT)
+#define IRQ_BOARD_START   (NR_IRQ_CPU + NR_STARTUP_BOARD_IRQS)
 
 /* Route all internal chip events to IRQ_EVT_ROUTER0 */
-#define IRQ_EVTR0_START        IRQ_EVT_START
-#define IRQ_EVTR0_END          (IRQ_BOARD_START - 1)
+#define IRQ_EVTR0_START        NR_IRQ_CPU
+#define IRQ_EVTR0_END          (NR_IRQ_CPU + 31)
 
 
 #if defined (CONFIG_MACH_VAL3153) 
@@ -142,9 +138,9 @@
 
 
 #elif defined (CONFIG_MACH_EA313X) || defined(CONFIG_MACH_EA3152)
-# define IRQ_DM9000_ETH_INT   IRQ_BOARD_START	/* Ethernet chip */
-# define IRQ_SDMMC_CD         (IRQ_BOARD_START + 1)	/* SD card detect */
-# define IRQ_EA_VBUS_OVRC     (IRQ_BOARD_START + 2)	/* Over current indicator */
+# define IRQ_DM9000_ETH_INT   evt_to_irq(EVT_mNAND_RYBN3)		/* Ethernet chip */
+# define IRQ_SDMMC_CD         evt_to_irq(EVT_mNAND_RYBN2)		/* SD card detect */
+# define IRQ_EA_VBUS_OVRC     evt_to_irq(EVT_I2SRX_WS0)			/* Over current indicator */
 # define NR_IRQ_BOARD         3
 
 /* now define board irq to event pin map */
@@ -161,12 +157,12 @@
    IRQ_EVT_ROUTERx IRQ is generated when event in the corresponding 
    group triggers.
 */
-#define IRQ_EVTR1_START        IRQ_DM9000_ETH_INT
-#define IRQ_EVTR1_END          IRQ_DM9000_ETH_INT
-#define IRQ_EVTR2_START        IRQ_SDMMC_CD
-#define IRQ_EVTR2_END          IRQ_SDMMC_CD
-#define IRQ_EVTR3_START        IRQ_EA_VBUS_OVRC
-#define IRQ_EVTR3_END          IRQ_EA_VBUS_OVRC
+#define IRQ_EVTR1_START        (IRQ_EVTR0_END + 1)
+#define IRQ_EVTR1_END          (IRQ_EVTR1_START + 31)
+#define IRQ_EVTR2_START        (IRQ_EVTR1_END + 1)
+#define IRQ_EVTR2_END          (IRQ_EVTR2_START + 31)
+#define IRQ_EVTR3_START        (IRQ_EVTR2_END + 1)
+#define IRQ_EVTR3_END          (IRQ_EVTR3_START + 29)
 
 #elif defined (CONFIG_MACH_VAL3154)
 # define IRQ_SDMMC_CD	 IRQ_BOARD_START 	/* SD card detect */
@@ -202,6 +198,7 @@
 #endif
 
 
-#define NR_IRQS		(NR_IRQ_CPU + NR_IRQ_CHIP_EVT + NR_IRQ_BOARD)
+#define NR_IRQS		(NR_IRQ_CPU + NR_EVENTS )
+
 
 #endif

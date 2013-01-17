@@ -83,64 +83,96 @@ static struct irq_chip lpc313x_internal_chip = {
 
 static void evt_mask_irq(unsigned int irq)
 {
-	u32 bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-	u32 bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	u32 evt, bank, bit_pos;
+	evt = irq_to_evt(irq);
+	bank = EVT_GET_BANK(evt);
+	bit_pos = evt  & 0x1F;
 
 	EVRT_MASK_CLR(bank) = _BIT(bit_pos);
 }
 
 static void evt_unmask_irq(unsigned int irq)
 {
-	u32 bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-	u32 bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	u32 evt, bank, bit_pos;
+	evt = irq_to_evt(irq);
+	bank = EVT_GET_BANK(evt);
+	bit_pos = evt  & 0x1F;
 
 	EVRT_MASK_SET(bank) = _BIT(bit_pos);
 }
 
 static void evt_ack_irq(unsigned int irq)
 {
-	u32 bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-	u32 bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	u32 evt, bank, bit_pos;
+	evt = irq_to_evt(irq);
+	bank = EVT_GET_BANK(evt);
+	bit_pos = evt  & 0x1F;
 	//EVRT_MASK_CLR(bank) = _BIT(bit_pos);
 	EVRT_INT_CLR(bank) = _BIT(bit_pos);
 }
 
 static int evt_set_type(unsigned irq, unsigned type)
 {
-	u32 bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-	u32 bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	u32 evt, bank, bit_pos;
+	evt = irq_to_evt(irq);
+	bank = EVT_GET_BANK(evt);
+	bit_pos = evt  & 0x1F;
 
 	switch (type) {
 	case IRQ_TYPE_EDGE_RISING:
 		EVRT_APR(bank) |= _BIT(bit_pos);
 		EVRT_ATR(bank) |= _BIT(bit_pos);
+		set_irq_handler(irq, handle_edge_irq);
 		break;
 	case IRQ_TYPE_EDGE_FALLING:
 		EVRT_APR(bank) &= ~_BIT(bit_pos);
 		EVRT_ATR(bank) |= _BIT(bit_pos);
+		set_irq_handler(irq, handle_edge_irq);
 		break;
 	case IRQ_TYPE_EDGE_BOTH:
 		EVRT_ATR(bank) |= _BIT(bit_pos);
+		set_irq_handler(irq, handle_edge_irq);
 		break;
 	case IRQ_TYPE_LEVEL_HIGH:
 		EVRT_APR(bank) |= _BIT(bit_pos);
 		EVRT_ATR(bank) &= ~_BIT(bit_pos);
+		set_irq_handler(irq, handle_level_irq);
 		break;
 	case IRQ_TYPE_LEVEL_LOW:
 		EVRT_APR(bank) &= ~_BIT(bit_pos);
 		EVRT_ATR(bank) &= ~_BIT(bit_pos);
+		set_irq_handler(irq, handle_level_irq);	
 		break;
 	default:
 		return -EINVAL;
 	}
+
+	if ( (irq >= IRQ_EVTR0_START) && (irq <= IRQ_EVTR0_END) ) {
+			/* enable routing to vector 0 */
+			EVRT_OUT_MASK_SET(0, bank) = _BIT(bit_pos);
+		} else if ( (irq >= IRQ_EVTR1_START) && (irq <= IRQ_EVTR1_END) ) {
+			/* enable routing to vector 1 */
+			EVRT_OUT_MASK_SET(1, bank) = _BIT(bit_pos);
+		} else if ( (irq >= IRQ_EVTR2_START) && (irq <= IRQ_EVTR2_END) ) {
+			/* enable routing to vector 2 */
+			EVRT_OUT_MASK_SET(2, bank) = _BIT(bit_pos);
+		} else if ( (irq >= IRQ_EVTR3_START) && (irq <= IRQ_EVTR3_END) ) {
+			/* enable routing to vector 3 */
+			EVRT_OUT_MASK_SET(3, bank) = _BIT(bit_pos);
+		} else {
+			printk("Invalid Event router setup.\r\n");
+		}
+			/* DELETE_MAKRO_ASDQWERTZ089  printk("SET EVENT ROUTER REGISTER MASK irq=%d, type=%d, bank=%d, bit_pos=0x%x\n", irq, type,bank, bit_pos); */
 
 	return 0;
 }
 
 static int evt_set_wake(unsigned irq, unsigned value)
 {
-	u32 bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-	u32 bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	u32 evt, bank, bit_pos;
+	evt = irq_to_evt(irq);
+	bank = EVT_GET_BANK(evt);
+	bit_pos = evt  & 0x1F;
 
 	if (value)
 		/* enable routing to CGU_WAKEUP */
@@ -165,23 +197,17 @@ static struct irq_chip lpc313x_evtr_chip = {
 
 #define ROUTER_HDLR(n) \
 	static void router##n##_handler (unsigned int irq, struct irq_desc *desc) { \
-		u32 status, bank, bit_pos; \
-		if (IRQ_EVTR##n##_START == IRQ_EVTR##n##_END) { \
-			/* translate IRQ number */ \
-			irq = IRQ_EVTR##n##_START; \
-			generic_handle_irq(irq); \
-		} else { \
-			for (irq = IRQ_EVTR##n##_START; irq <= IRQ_EVTR##n##_END; irq++) {  \
-				/* compute bank & bit position for the event_pin */ \
-				bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin); \
-				bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F; \
-				status = EVRT_OUT_PEND(n, bank); \
-				if (status & _BIT(bit_pos)) \
-					generic_handle_irq(irq); \
+		u32 evt, bank, bit_pos, status; \
+		for(irq = IRQ_EVTR##n##_START; irq <= IRQ_EVTR##n##_END; irq++) { \
+			evt = irq_to_evt(irq); \
+			bank = EVT_GET_BANK(evt); \
+			bit_pos = evt & 0x1F; \
+			status = EVRT_OUT_PEND(n, bank); \
+			if (status & _BIT(bit_pos)) { \
+				generic_handle_irq(irq); \
 			} \
 		} \
 	}
-
 
 #if IRQ_EVTR0_END
 ROUTER_HDLR(0)
@@ -254,62 +280,54 @@ void __init lpc313x_init_irq(void)
 		set_irq_flags(irq, IRQF_VALID);
 	}
 
-	/* Now configure external/board interrupts using event router */
-	for (irq = IRQ_EVT_START; irq < NR_IRQS; irq++) {
-		/* compute bank & bit position for the event_pin */
-		bank = EVT_GET_BANK(irq_2_event[irq - IRQ_EVT_START].event_pin);
-		bit_pos = irq_2_event[irq - IRQ_EVT_START].event_pin & 0x1F;
+	for(irq = NR_IRQ_CPU; irq <  NR_IRQS ; irq++) {
+		bank = EVT_GET_BANK(irq_to_evt(irq));	
+		bit_pos = irq_to_evt(irq) & 0x1F ;
 		
-		printk("irq=%d Event=0x%x bank:%d bit:%d type:%d\r\n", irq,
-			irq_2_event[irq - IRQ_EVT_START].event_pin, bank,
-			bit_pos, irq_2_event[irq - IRQ_EVT_START].type);
-
+		/* DELETE_MAKRO_ASDQWERTZ089 printk("irq=%d Event=0x%x bank:%d bit:%d type:none\r\n", irq, irq_to_evt(irq), bank, bit_pos); */
+		
 		set_irq_chip(irq, &lpc313x_evtr_chip);
 		set_irq_flags(irq, IRQF_VALID);
-		/* configure the interrupt senstivity */
-		switch (irq_2_event[irq - IRQ_EVT_START].type) {
+		//set_irq_handler(irq, handle_level_irq);
+		}
+	
+
+	/* Now configure extra mapped events */
+	for (i = 0; i <  NR_STARTUP_BOARD_IRQS  ; i++) {
+		
+		
+		/* compute bank & bit position for the event_pin */
+		irq = irq_2_event[i].irq;
+		bank = EVT_GET_BANK(irq_2_event[i].event_pin);
+		bit_pos = irq_2_event[i].event_pin & 0x1F;
+		
+
+		printk("irq=%d Event=0x%x bank:%d bit:%d type:%d\r\n",irq,
+			irq_2_event[i].event_pin, bank,
+			bit_pos, irq_2_event[i].type);
+
+
+		/* configure the interrupt trigger level */
+		switch (irq_2_event[i].type) {
 			case EVT_ACTIVE_LOW:
-				EVRT_APR(bank) &= ~_BIT(bit_pos);
-				EVRT_ATR(bank) &= ~_BIT(bit_pos);
-				set_irq_handler(irq, handle_level_irq);
+				set_irq_type(irq, IRQ_TYPE_LEVEL_LOW);
 				break;
 			case EVT_ACTIVE_HIGH:
-				EVRT_APR(bank) |= _BIT(bit_pos);
-				EVRT_ATR(bank) &= ~_BIT(bit_pos);
-				set_irq_handler(irq, handle_level_irq);
+				set_irq_type(irq, IRQ_TYPE_LEVEL_HIGH);
 				break;
 			case EVT_FALLING_EDGE:
-				EVRT_APR(bank) &= ~_BIT(bit_pos);
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
+				set_irq_type(irq, IRQ_TYPE_EDGE_FALLING);
 				break;
 			case EVT_RISING_EDGE:
-				EVRT_APR(bank) |= _BIT(bit_pos);
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
+				set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
 				break;
 			case EVT_BOTH_EDGE:
-				EVRT_ATR(bank) |= _BIT(bit_pos);
-				set_irq_handler(irq, handle_edge_irq);
+				set_irq_type(irq, IRQ_TYPE_EDGE_BOTH);
 			default:
 				printk("Invalid Event type.\r\n");
 				break;
 		}
-		if ( (irq >= IRQ_EVTR0_START) && (irq <= IRQ_EVTR0_END) ) {
-			/* enable routing to vector 0 */
-			EVRT_OUT_MASK_SET(0, bank) = _BIT(bit_pos);
-		} else if ( (irq >= IRQ_EVTR1_START) && (irq <= IRQ_EVTR1_END) ) {
-			/* enable routing to vector 1 */
-			EVRT_OUT_MASK_SET(1, bank) = _BIT(bit_pos);
-		} else if ( (irq >= IRQ_EVTR2_START) && (irq <= IRQ_EVTR2_END) ) {
-			/* enable routing to vector 2 */
-			EVRT_OUT_MASK_SET(2, bank) = _BIT(bit_pos);
-		} else if ( (irq >= IRQ_EVTR3_START) && (irq <= IRQ_EVTR3_END) ) {
-			/* enable routing to vector 3 */
-			EVRT_OUT_MASK_SET(3, bank) = _BIT(bit_pos);
-		} else {
-			printk("Invalid Event router setup.\r\n");
-		}
+		
 	}
 	/* for power management. Wake from internal irqs */
 	EVRT_APR(3) &= ~_BIT(12);

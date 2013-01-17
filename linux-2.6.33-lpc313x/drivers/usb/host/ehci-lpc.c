@@ -304,7 +304,7 @@ static int lpc_ehci_resume(struct device *dev)
 static int lpc313x_ehci_suspend(struct platform_device *pdev, pm_message_t state)
 {
 #ifdef CONFIG_PM
-	disable_irq(IRQ_VBUS_OVRC);
+	disable_irq(IRQ_usb_otg_vbus_pwr_en);
 	/* Shutoff vbus power */
 	lpc313x_vbus_power(0);
 	/* Bring PHY to low power state */
@@ -337,7 +337,7 @@ static int lpc313x_ehci_resume(struct platform_device * pdev)
 	/* Bring PHY to active state */
 	USB_DEV_PORTSC1 &= ~USBPRTS_PLPSCD;
 	lpc313x_vbus_power(1);
-	enable_irq(IRQ_VBUS_OVRC);
+	enable_irq(IRQ_usb_otg_vbus_pwr_en);
 #endif
 	return 0;
 }

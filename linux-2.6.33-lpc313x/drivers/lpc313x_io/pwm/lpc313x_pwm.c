@@ -1,7 +1,7 @@
 /*  pwm-module.c
  *
  *  Author:    Michael Schwarz
- *  Copyright (C) 2011 Michael Schwarz
+ *  		   Benedikt Niedermayr (niedermayr@embedded-projects.net)
  *
  * PWM module for LPC313x
  *
@@ -29,13 +29,19 @@
 
 #include <mach/hardware.h>
 #include <mach/gpio.h>
+#include <linux/cdev.h>       /* Support for /sys/class */
+#include <linux/device.h>
 
 #include "lpc313x_pwm.h"
 
 static int pwm_value = 0;
-
-static int dev_major = 0;
 static int dev_open = 0; 
+
+static dev_t driv_number;
+static struct cdev *driv_object;
+static struct class *driv_class;
+static struct device *driv_dev;
+
 
 static struct file_operations fops = {
  .read = device_read,
@@ -65,7 +71,7 @@ static ssize_t device_write(struct file *filp, const char *buff, size_t len, lof
  pwm_value = (in_buffer[0] + (in_buffer[1] << 8));
  PWM_TMR_REG = pwm_value & PWM_MR_MASK;
  
- printk("[lpc313x pwm debug message] pwm to %d (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
+ printk("[lpc313x_pwm] pwm to %d (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
 
  return len;
 }
@@ -90,7 +96,7 @@ static int device_release(struct inode *inode, struct file *file) {
 
 
 int __init init_pwm(void) {
- printk("[lpc313x pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096);
+ printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096);
  
  /* enable clock for PWM */
  cgu_clk_en_dis(CGU_SB_PWM_PCLK_ID, 1);
@@ -101,28 +107,55 @@ int __init init_pwm(void) {
  PWM_TMR_REG = PWM_TMR_DEFAULT;
  PWM_CNTL_REG = PWM_CNTL_DEFAULT;
  
- dev_major = register_chrdev(0, DEVICE_NAME, &fops);
- if (dev_major < 0) {
-  printk(KERN_ALERT "[lpc313x pwm] Registering char device failed with %d\n", dev_major);
-  return dev_major;
- }
- printk(KERN_INFO "[lpc313x pwm] driver loaded with major %d\n", dev_major);
- printk(KERN_INFO "[lpc313x pwm] >> $ mknod /dev/%s c %d 0\n", DEVICE_NAME, dev_major);
- 
- pwm_value = 0; 
- 
+	/* Driver loading with Sysfs support --BN */
+    if(alloc_chrdev_region(&driv_number,0,1,"lpc313x_pwm_dev") < 0 ) return -EIO;
+		driv_object = cdev_alloc(); 
+
+	if( driv_object==NULL)
+		goto free_device_number;
+
+	driv_object->owner = THIS_MODULE;
+	driv_object->ops   = &fops;
+
+	if( cdev_add(driv_object,driv_number,1))
+	goto free_cdev;
+	
+	driv_class = class_create(THIS_MODULE, "lpc313x_pwm");
+	if( IS_ERR(driv_class) ) {
+		pr_err(	"[lpc313x_pwm] no sysfs support\n");
+		goto free_cdev;
+	}
+
+
+	 driv_dev = device_create(driv_class, NULL, driv_number, NULL, "%s", "lpc313x_pwm");
+
+
+ 	pwm_value = 0; 
+ 	dev_info(driv_dev, "[lpc313x_pwm] driver loaded\n");
  return 0;
+
+
+free_cdev:
+	kobject_put(&driv_object->kobj);
+free_device_number:
+	unregister_chrdev_region(driv_number, 1);
+	return -EIO;
 }
 
 void __exit cleanup_pwm(void) {
- printk("[lpc313x pwm] cleanup\n");
  
  /* disable clock for PWM */
  cgu_clk_en_dis(CGU_SB_PWM_PCLK_ID, 0);
  cgu_clk_en_dis(CGU_SB_PWM_PCLK_REGS_ID, 0);
  cgu_clk_en_dis(CGU_SB_PWM_CLK_ID, 0);
  
- unregister_chrdev(dev_major, DEVICE_NAME);
+ device_release_driver(driv_dev);
+ device_destroy(driv_class,driv_number);
+ class_destroy(driv_class);
+ cdev_del(driv_object);
+ unregister_chrdev_region(driv_number,1);
+
+ dev_info(driv_dev, "[lpc313x_pwm] driver unloaded\n");
 }
 
 

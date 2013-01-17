@@ -113,8 +113,8 @@ static struct lpc313x_gpio_pin gpio_pins_gpio[] = {
 		LPC313X_GPIO_PIN("GPIO16", EVT_GPIO16, 10),
 		LPC313X_GPIO_PIN("GPIO17", EVT_GPIO17, 11),
 		LPC313X_GPIO_PIN("GPIO18", EVT_GPIO18, 12),
-		LPC313X_GPIO_PIN("GPIO19", -1 /*EVT_GPIO19*/, 13),
-		LPC313X_GPIO_PIN("GPIO20", -1 /*EVT_GPIO20*/, 14),
+		LPC313X_GPIO_PIN("GPIO19", EVT_GPIO19, 13),
+		LPC313X_GPIO_PIN("GPIO20", EVT_GPIO20, 14),
 };
 
 static struct lpc313x_gpio_pin gpio_pins_ebi_mci[] = {
@@ -346,12 +346,12 @@ static int lpc313x_gpiolib_to_irq(struct gpio_chip *chip, unsigned offset)
 {
 	struct lpc313x_gpio_chip *pchip = to_lpc313x_gpio_chip(chip);
 
+//printk("GPIO_TO_IRQ: GPIO_NAME=%s, GPIO_ID=%d, IRQ_ID=%d EVENT_ID=%d\n",pchip->pins[offset].name, offset, (event + (NR_IRQ_CPU )), pchip->pins[offset].event_id );
 	if(pchip->pins) {
 		int event = pchip->pins[offset].event_id;
 		if(event >= 0) {
-      return (event + NR_IRQ_CPU);   
-             /* In patch 0009... by Ingo Albrecht this is 
-                IRQ_FOR_EVENT(event);    --hh */
+      return (event + (NR_IRQ_CPU) );   
+             /* Now IRQ number is correct IRQ = event + NR_IRQ_CPU  --BN */
 		}
 	}
 	return -1;
