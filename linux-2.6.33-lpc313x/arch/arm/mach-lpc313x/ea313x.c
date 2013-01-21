@@ -369,7 +369,7 @@ static void spi_set_cs_state(int cs_num, int state)
 
 	if(cs_num == 2) /* Chipselect for second device */
 	{
-		gpio_set_value(GPIO_GPIO15, state);
+		gpio_set_value(GPIO_GPIO19, state);
 	}
 
 }
