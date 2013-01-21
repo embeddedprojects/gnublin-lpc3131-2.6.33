@@ -479,10 +479,20 @@ struct pca953x_platform_data pca9555_plaform_info = {
 		.invert = 0,
 		//.setup = pca_9555_setup,
 };
+
+struct pca953x_platform_data pca9555_plaform_info2 = {
+		.gpio_base = 114,
+		.invert = 0,
+		//.setup = pca_9555_setup,
+};
+
 static struct i2c_board_info ea313x_i2c_devices[] __initdata = {
 	{
 		I2C_BOARD_INFO("pca9555", 0x20),
 		.platform_data = &pca9555_plaform_info,
+	}, {
+		I2C_BOARD_INFO("pca9555", 0x21),
+		.platform_data = &pca9555_plaform_info2,
 	},
 };
 
