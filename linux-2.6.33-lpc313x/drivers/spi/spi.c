@@ -260,10 +260,15 @@ int spi_add_device(struct spi_device *spi)
 
 	/* Chipselects are numbered 0..max; validate. */
 	if (spi->chip_select >= spi->master->num_chipselect) {
-		dev_err(dev, "cs%d >= max %d\n",
+
+		/* DELETE_MAKRO_ASDQWERTZ089 dev_err(dev, "cs%d >= max %d\n",
 			spi->chip_select,
 			spi->master->num_chipselect);
-		return -EINVAL;
+			return -EINVAL;*/
+		dev_warn(dev, "cs%d >= max %d. On Gnublin this is a workaround for dynamic chipselect allocation!\n",
+			spi->chip_select,
+			spi->master->num_chipselect);
+		
 	}
 
 	/* Set the bus ID string */
@@ -649,7 +654,7 @@ int spi_setup(struct spi_device *spi)
 
 	status = spi->master->setup(spi);
 
-	dev_dbg(&spi->dev, "setup mode %d, %s%s%s%s"
+	dev_info(&spi->dev, "setup mode %d, %s%s%s%s"
 				"%u bits/w, %u Hz max --> %d\n",
 			(int) (spi->mode & (SPI_CPOL | SPI_CPHA)),
 			(spi->mode & SPI_CS_HIGH) ? "cs_high, " : "",

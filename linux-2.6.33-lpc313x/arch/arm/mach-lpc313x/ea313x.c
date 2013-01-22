@@ -357,39 +357,16 @@ static struct resource lpc313x_spi_resources[] = {
 static void spi_set_cs_state(int cs_num, int state)
 {
 
-	if(cs_num == 0) /* SPI-DEV Chipselect */
-	{
-		gpio_set_value(GPIO_GPIO11, state);
-	}
+	/* DELETE_MAKRO_ASDQWERTZ089 printk("Chipselect Called with cs_pin=%d to value=%d\n",cs_num,state); */
+	gpio_set_value(cs_num, state);
+	/* DELETE_MAKRO_ASDQWERTZ089 ("Aftercalled\n");	 */
 	
-	if(cs_num == 1) /* Chipselect for second device */
-	{
-		gpio_set_value(GPIO_GPIO14, state);
-	}
-
-	if(cs_num == 2) /* Chipselect for second device */
-	{
-		gpio_set_value(GPIO_GPIO19, state);
-	}
-
 }
 
 struct lpc313x_spics_cfg lpc313x_stdspics_cfg[] =
 {
 	/* SPI CS0 */
 	[0] =
-	{
-		.spi_spo	= 0, /* Low clock between transfers */
-		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
-		.spi_cs_set	= spi_set_cs_state,
-	},
-	[1] =
-	{
-		.spi_spo	= 0, /* Low clock between transfers */
-		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */
-		.spi_cs_set	= spi_set_cs_state,
-	},
-	[2] =
 	{
 		.spi_spo	= 0, /* Low clock between transfers */
 		.spi_sph	= 0, /* Data capture on first clock edge (high edge with spi_spo=0) */

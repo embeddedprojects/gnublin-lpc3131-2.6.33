@@ -136,7 +136,9 @@ static inline void lpc313x_int_en(struct lpc313xspi *spidat, u32 ints)
  */
 static inline void spi_force_cs(struct lpc313xspi *spidat, u8 cs, uint cs_state)
 {
-	spidat->psppcfg->spics_cfg[cs].spi_cs_set((int) cs, (int) cs_state);
+	/* DELETE_MAKRO_ASDQWERTZ089 spidat->psppcfg->spics_cfg[cs].spi_cs_set((int) cs, (int) cs_state); --BN */
+	  
+	spidat->psppcfg->spics_cfg[0].spi_cs_set((int) cs, (int) cs_state);
 }
 
 /*
@@ -241,23 +243,23 @@ static int lpc313x_spi_setup(struct spi_device *spi)
 {
 	unsigned int bits = spi->bits_per_word;
 
-	/* There really isn't anuthing to do in this function, so verify the
+	/* There really isn't anything to do in this function, so verify the
 	   parameters are correct for the transfer */
-	if (spi->chip_select > spi->master->num_chipselect)
+/* DELETE_MAKRO_ASDQWERTZ089 if (spi->chip_select > spi->master->num_chipselect)
 	{
-		dev_dbg(&spi->dev,
+		dev_err(&spi->dev,
 			"setup: invalid chipselect %u (%u defined)\n",
 			spi->chip_select, spi->master->num_chipselect);
 		return -EINVAL;
 	}
-
+*/
 	if (bits == 0)
 	{
 		bits = 8;
 	}
 	if ((bits < 4) || (bits > 16))
 	{
-		dev_dbg(&spi->dev,
+		dev_err(&spi->dev,
 			"setup: invalid bits_per_word %u (8 to 16)\n", bits);
 		return -EINVAL;
 	}
@@ -754,15 +756,18 @@ static int __init lpc313x_spi_probe(struct platform_device *pdev)
 		ret = -ENODEV;
 		goto errout;
 	}
+
+	/* DELETE_MAKRO_ASDQWERTZ089 Temporary disable this for testing dynamic chipselects 	
 	for (i = 0; i < spidat->psppcfg->num_cs; i++)
 	{
 		if (spidat->psppcfg->spics_cfg[i].spi_cs_set == NULL)
 		{
-			/* Missing hardware CS control callback, exit */
+			// Missing hardware CS control callback, exit 
 			ret = -ENODEV;
 			goto errout;
 		}
 	}
+	*/
 
 	/* Save ID for this device */
 	spidat->pdev = pdev;

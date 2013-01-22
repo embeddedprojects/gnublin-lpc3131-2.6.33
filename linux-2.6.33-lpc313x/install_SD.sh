@@ -4,6 +4,7 @@
 path1=$(pwd)
 path2="$1"
 
+make gnublin_defconfig
 make zImage  || exit 1 
 make modules || exit 1
 sudo rm -r /home/brenson/tmp/modules_install/*

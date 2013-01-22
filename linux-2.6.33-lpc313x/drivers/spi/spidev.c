@@ -102,11 +102,11 @@ module_param(bufsiz, uint, S_IRUGO);
 MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
 /* Additional Modul Parameters for dynamically allozation module load */
-static int irq_pin = 14; 
+static int irq_pin = 11; 
 module_param(irq_pin, int, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
 
-static int cs_pin = 0;
+static int cs_pin = 13;
 module_param(cs_pin, int, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)" );
 
@@ -787,9 +787,9 @@ module_init(spidev_init);
 
 static void __exit spidev_exit(void)
 {
-	struct spi_master *spi_master;
+	//struct spi_master *spi_master;
 	struct spi_device *spi_device;
-	struct device *pdev;
+	//struct device *pdev;
 	
 
 	/* Connect the global spi_dev pointer --BN */
