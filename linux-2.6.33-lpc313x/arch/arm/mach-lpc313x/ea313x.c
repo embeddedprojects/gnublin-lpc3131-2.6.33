@@ -356,6 +356,14 @@ static struct resource lpc313x_spi_resources[] = {
 
 static void spi_set_cs_state(int cs_num, int state)
 {
+	/* get the correct GPIO<x> mapping */
+	if (cs_num == 1) {
+	cs_num = 0 ;
+	} else if (cs_num == 0) {
+	cs_num = 1 ;
+	} else if ((cs_num > 4) && (cs_num <= 20)) {
+	cs_num = cs_num - 6 ;
+	}
 
 	/* DELETE_MAKRO_ASDQWERTZ089 printk("Chipselect Called with cs_pin=%d to value=%d\n",cs_num,state); */
 	gpio_set_value(cs_num, state);
