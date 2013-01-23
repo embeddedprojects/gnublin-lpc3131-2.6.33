@@ -25,15 +25,37 @@
 #define PCA953X_OUTPUT         1
 #define PCA953X_INVERT         2
 #define PCA953X_DIRECTION      3
-int cnt = 0;
-static int addr1 = 1 ;
-int addr2 = 1;
-int addr3 = 1;
-int addr4 = 1; 
-static int i2c_addr1 = 1 ;
-int i2c_addr2 = 1;
-int i2c_addr3 = 1;
-int i2c_addr4 = 1; 
+
+
+static int cnt = 1;
+module_param(cnt, int, S_IRUGO);
+MODULE_PARM_DESC(cnt, "Number of pca9555 slaves on the i2c-bus. Default is 1");
+
+static char addr1[5] = "";
+module_param_string(addr1, addr1, sizeof(addr1), S_IRUGO);
+MODULE_PARM_DESC(addr1, "Adress of pca9555 chip 1. E.g addr1=0x20");
+
+
+static char addr2[5] = "";
+module_param_string(addr2, addr2, sizeof(addr2), S_IRUGO);
+MODULE_PARM_DESC(addr2, "Adress of pca9555 chip 2");
+
+
+static char addr3[5] = "";
+module_param_string(addr3, addr3, sizeof(addr3), S_IRUGO);
+MODULE_PARM_DESC(addr3, "Adress of pca9555 chip 3");
+
+
+static char addr4[5] = "";
+module_param_string(addr4, addr4, sizeof(addr4), S_IRUGO);
+MODULE_PARM_DESC(addr4, "Adress of pca9555 chip 4");
+
+
+static char addr5[5] = "";
+module_param_string(addr5, addr5, sizeof(addr5), S_IRUGO);
+MODULE_PARM_DESC(addr5, "Adress of pca9555 chip 5");
+
+ 
 static const struct i2c_device_id pca953x_id[] = {
 	{ "pca9534", 8, },
 	{ "pca9535", 16, },
@@ -368,7 +390,7 @@ static struct i2c_driver pca953x_driver = {
 };
 
 
-/*
+
 struct pca953x_platform_data pca9555_plaform_info[] = {
 		{
 			.gpio_base = 98,
@@ -382,45 +404,102 @@ struct pca953x_platform_data pca9555_plaform_info[] = {
 			.gpio_base = 130,
 			.invert = 0,
 		},
+		{
+			.gpio_base = 146,
+			.invert = 0,
+		},
+		{
+			.gpio_base = 162,
+			.invert = 0,
+		},
 };
+
+/*
 static struct i2c_board_info pca953x_i2c_devices[] = {
 	{
-		I2C_BOARD_INFO("pca9555", addr1),
+		.type = "pca9555",
+		.addr= 0x4d,
 		.platform_data = &pca9555_plaform_info[0],
 	},
 	{
-		I2C_BOARD_INFO("pca9555", addr2),
+		.type = "pca9555",
+		.addr= 0x4c,
 		.platform_data = &pca9555_plaform_info[1],
 	},
 	{
-		I2C_BOARD_INFO("pca9555", addr3),
+		.type = "pca9555",
+		.addr= 0x4b,
 		.platform_data = &pca9555_plaform_info[2],
 	},
 };
-
+*/
 
 static int get_platform_data_pca953x(void)
 {
-	char *buffer;
-	if(cnt == 1){
-			i2c_addr1 = addr1;
-			i2c_register_board_info(1, pca953x_i2c_devices,
-			cnt);
-	} else if (cnt == 2) {
-			i2c_addr1 = addr1;			
-			i2c_addr2 = addr2;	
-	} else if (cnt == 3) {
-			i2c_addr1 = addr1;			
-			i2c_addr2 = addr2;
-			i2c_addr3 = addr3;
+	struct i2c_board_info      board_info[10];
+	struct i2c_adapter *i2c_adap;
+	struct i2c_client *dev;
+	int  i;
+	int addr1_int,addr2_int,addr3_int,addr4_int,addr5_int;
+for(i=1; i <= cnt; i++) 
+{
+	if(i == 1) {
+			printk("ADRESS 1=%s\n",addr1);
+			memset(&board_info[i-1], 0, sizeof(struct i2c_board_info));
+			addr1_int = simple_strtol (addr1, NULL, 16);
+			i2c_adap = i2c_get_adapter(1);
+			strlcpy(board_info[i-1].type, "pca9555", I2C_NAME_SIZE);
+			board_info[i-1].addr = addr1_int;
+			board_info[i-1].platform_data = &pca9555_plaform_info[i-1];
+			dev = i2c_new_device(i2c_adap, &board_info[i-1]);
+
+	} else if (i == 2) {
+			printk("ADRESS 2=%s\n",addr2);
+			memset(&board_info[i-1], 0, sizeof(struct i2c_board_info));
+			addr2_int = simple_strtol (addr2, NULL, 16);
+			i2c_adap = i2c_get_adapter(1);
+			strlcpy(board_info[i-1].type, "pca9555", I2C_NAME_SIZE);
+			board_info[i-1].addr = addr2_int;
+			board_info[i-1].platform_data = &pca9555_plaform_info[i-1];
+			dev = i2c_new_device(i2c_adap, &board_info[i-1]);
+	
+	} else if (i == 3) {
+			printk("ADRESS 3=%s\n",addr3);
+			memset(&board_info[i-1], 0, sizeof(struct i2c_board_info));
+			addr3_int = simple_strtol (addr3, NULL, 16);
+			i2c_adap = i2c_get_adapter(1);
+			strlcpy(board_info[i-1].type, "pca9555", I2C_NAME_SIZE);
+			board_info[i-1].addr = addr3_int;
+			board_info[i-1].platform_data = &pca9555_plaform_info[i-1];
+			dev = i2c_new_device(i2c_adap, &board_info[i-1]);
+	} else if (i == 4) {
+			printk("ADRESS 4=%s\n",addr4);
+			memset(&board_info[i-1], 0, sizeof(struct i2c_board_info));
+			addr4_int = simple_strtol (addr4, NULL, 16);
+			i2c_adap = i2c_get_adapter(1);
+			strlcpy(board_info[i-1].type, "pca9555", I2C_NAME_SIZE);
+			board_info[i-1].addr = addr4_int;
+			board_info[i-1].platform_data = &pca9555_plaform_info[i-1];
+			dev = i2c_new_device(i2c_adap, &board_info[i-1]);
+	} else if (i == 5) {
+			printk("ADRESS 5=%s\n",addr5);
+			memset(&board_info[i-1], 0, sizeof(struct i2c_board_info));
+			addr5_int = simple_strtol (addr5, NULL, 16);
+			i2c_adap = i2c_get_adapter(1);
+			strlcpy(board_info[i-1].type, "pca9555", I2C_NAME_SIZE);
+			board_info[i-1].addr = addr5_int;
+			board_info[i-1].platform_data = &pca9555_plaform_info[i-1];
+			dev = i2c_new_device(i2c_adap, &board_info[i-1]);
 	}
 }
 
-*/
+}
+
+
 static int __init pca953x_init(void)
 {
 	
-	//get_platform_data_pca953x();
+	get_platform_data_pca953x();
 	return i2c_add_driver(&pca953x_driver);
 }
 /* register after i2c postcore initcall and before

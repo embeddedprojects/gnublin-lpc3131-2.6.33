@@ -108,7 +108,7 @@ MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
 
 static int cs_pin = 5;
 module_param(cs_pin, int, S_IRUGO|S_IWUSR);
-MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin.0=GPIO11, 1=GPIO14, 2=GPIO15. (0 is default)" );
+MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin. Enter a GPIO<x> id" );
 
 
 /*-------------------------------------------------------------------------*/

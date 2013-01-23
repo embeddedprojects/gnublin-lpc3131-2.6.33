@@ -47,6 +47,7 @@
 
 #include <linux/can/platform/mcp251x.h>
 #include <linux/i2c/pca953x.h>
+#include <linux/serial_sc16is7x2.h>
 
 static struct lpc313x_mci_irq_data irq_data = {
 	.irq = IRQ_SDMMC_CD,
@@ -458,7 +459,7 @@ static struct map_desc ea313x_io_desc[] __initdata = {
 		.type		= MT_DEVICE
 	},
 };
-
+/*
 struct pca953x_platform_data pca9555_plaform_info = {
 		.gpio_base = 98,
 		.invert = 0,
@@ -470,6 +471,38 @@ static struct i2c_board_info ea313x_i2c_devices[] __initdata = {
 		.platform_data = &pca9555_plaform_info,
 	},
 };
+*/
+
+static struct sc16is7x2_platform_data sc16is7x2_SERIALPORT3_data = {
+    .uartclk = 1843200,
+    .uart_base = 0,
+    .gpio_base = 178,
+    .label = NULL,
+    .names = NULL,
+};
+
+static int __init lpc313x_sc16is7x2_register(void)
+{
+    struct spi_board_info info =
+    {
+            .modalias               = "sc16is7x2",
+        .platform_data          = &sc16is7x2_SERIALPORT3_data,
+        .bus_num                = 0,
+        .irq                    = gpio_to_irq(14),
+        .chip_select            = 11,
+        .max_speed_hz           = 187500,
+        .mode                   = SPI_MODE_0,
+        //.controller_data    = &sc16is7x2_mcspi_config,
+        //.modalias = "sc16is7x2",
+        //.max_speed_hz = 10000000,
+        //.bus_num = 0,
+        //.irq = IRQ_GPIO_14,//IRQ_GPIO14
+        //.chip_select = 1,
+    };
+
+    return spi_register_board_info(&info, 1);
+}
+arch_initcall(lpc313x_sc16is7x2_register); 
 
 #if defined(CONFIG_MACH_EA3152)
 static struct i2c_board_info ea3152_i2c1_devices[] __initdata = {
@@ -494,8 +527,7 @@ static void __init ea313x_init(void)
 
 	/* register i2cdevices */
 	lpc313x_register_i2c_devices();
-	i2c_register_board_info(1, ea313x_i2c_devices,
-	ARRAY_SIZE(ea313x_i2c_devices));
+	//i2c_register_board_info(1, ea313x_i2c_devices, ARRAY_SIZE(ea313x_i2c_devices));
 
 
 	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO11 */
