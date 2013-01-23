@@ -25,7 +25,15 @@
 #define PCA953X_OUTPUT         1
 #define PCA953X_INVERT         2
 #define PCA953X_DIRECTION      3
-
+int cnt = 0;
+static int addr1 = 1 ;
+int addr2 = 1;
+int addr3 = 1;
+int addr4 = 1; 
+static int i2c_addr1 = 1 ;
+int i2c_addr2 = 1;
+int i2c_addr3 = 1;
+int i2c_addr4 = 1; 
 static const struct i2c_device_id pca953x_id[] = {
 	{ "pca9534", 8, },
 	{ "pca9535", 16, },
@@ -359,8 +367,60 @@ static struct i2c_driver pca953x_driver = {
 	.id_table	= pca953x_id,
 };
 
+
+/*
+struct pca953x_platform_data pca9555_plaform_info[] = {
+		{
+			.gpio_base = 98,
+			.invert = 0,
+		},
+		{
+			.gpio_base = 114,
+			.invert = 0,
+		},
+		{
+			.gpio_base = 130,
+			.invert = 0,
+		},
+};
+static struct i2c_board_info pca953x_i2c_devices[] = {
+	{
+		I2C_BOARD_INFO("pca9555", addr1),
+		.platform_data = &pca9555_plaform_info[0],
+	},
+	{
+		I2C_BOARD_INFO("pca9555", addr2),
+		.platform_data = &pca9555_plaform_info[1],
+	},
+	{
+		I2C_BOARD_INFO("pca9555", addr3),
+		.platform_data = &pca9555_plaform_info[2],
+	},
+};
+
+
+static int get_platform_data_pca953x(void)
+{
+	char *buffer;
+	if(cnt == 1){
+			i2c_addr1 = addr1;
+			i2c_register_board_info(1, pca953x_i2c_devices,
+			cnt);
+	} else if (cnt == 2) {
+			i2c_addr1 = addr1;			
+			i2c_addr2 = addr2;	
+	} else if (cnt == 3) {
+			i2c_addr1 = addr1;			
+			i2c_addr2 = addr2;
+			i2c_addr3 = addr3;
+	}
+}
+
+*/
 static int __init pca953x_init(void)
 {
+	
+	//get_platform_data_pca953x();
 	return i2c_add_driver(&pca953x_driver);
 }
 /* register after i2c postcore initcall and before
