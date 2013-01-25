@@ -60,8 +60,8 @@ struct lpc313xspi
 	int id;
 	u32 spi_base_clock;
 	struct lpc313x_spi_cfg *psppcfg;
-	u32 current_speed_hz [3]; /* Per CS */
-	u8 current_bits_wd [3]; /* Per CS */
+	u32 current_speed_hz [255]; /* Per CS */
+	u8 current_bits_wd [255]; /* Per CS */
 
 	/* DMA allocated regions */
 	u32 dma_base_v;
@@ -502,12 +502,12 @@ static void lpc313x_work_one(struct lpc313xspi *spidat, struct spi_message *m)
  
 		/* Setup timing and levels before initial chip select */
 		tmp = spi_readl(SLV_SET2_REG(0)) & ~(SPI_SLV2_SPO | SPI_SLV2_SPH);
-		if (spidat->psppcfg->spics_cfg[spi->chip_select].spi_spo != 0)
+		if (spidat->psppcfg->spics_cfg[0].spi_spo != 0)
 		{
 			/* Clock high between transfers */
 			tmp |= SPI_SLV2_SPO;
 		}
-		if (spidat->psppcfg->spics_cfg[spi->chip_select].spi_sph != 0)
+		if (spidat->psppcfg->spics_cfg[0].spi_sph != 0)
 		{
 			/* Data captured on 2nd clock edge */
 			tmp |= SPI_SLV2_SPH;

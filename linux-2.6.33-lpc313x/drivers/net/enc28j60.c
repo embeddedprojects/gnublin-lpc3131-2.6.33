@@ -1603,6 +1603,7 @@ static int __devinit enc28j60_probe(struct spi_device *spi)
 	dev_set_drvdata(&spi->dev, priv);	/* spi to priv reference */
 	SET_NETDEV_DEV(dev, &spi->dev);
 
+
 	if (!enc28j60_chipset_init(dev)) {
 		if (netif_msg_probe(priv))
 			dev_info(&spi->dev, DRV_NAME " chip not found\n");
@@ -1615,6 +1616,7 @@ static int __devinit enc28j60_probe(struct spi_device *spi)
 	/* Board setup must set the relevant edge trigger type;
 	 * level triggers won't currently work.
 	 */
+
 	ret = request_irq(spi->irq, enc28j60_irq, IRQ_TYPE_EDGE_FALLING, DRV_NAME, priv);
 	if (ret < 0) {
 		if (netif_msg_probe(priv))

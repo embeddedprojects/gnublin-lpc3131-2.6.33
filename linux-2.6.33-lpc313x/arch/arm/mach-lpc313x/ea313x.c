@@ -357,6 +357,7 @@ static struct resource lpc313x_spi_resources[] = {
 
 static void spi_set_cs_state(int cs_num, int state)
 {
+
 	/* get the correct GPIO<x> mapping */
 	if (cs_num == 1) {
 	cs_num = 0 ;
@@ -366,9 +367,9 @@ static void spi_set_cs_state(int cs_num, int state)
 	cs_num = cs_num - 6 ;
 	}
 
-	/* DELETE_MAKRO_ASDQWERTZ089 printk("Chipselect Called with cs_pin=%d to value=%d\n",cs_num,state); */
+	/* DELETE_MAKRO_ASDQWERTZ089 printk("Chipselect Called with cs_pin=%d to value=%d\n",cs_num,state); */ 
 	gpio_set_value(cs_num, state);
-	/* DELETE_MAKRO_ASDQWERTZ089 ("Aftercalled\n");	 */
+	/* DELETE_MAKRO_ASDQWERTZ089 printk("Aftercalled\n");	*/ 
 	
 }
 
@@ -472,7 +473,7 @@ static struct i2c_board_info ea313x_i2c_devices[] __initdata = {
 	},
 };
 */
-
+/*
 static struct sc16is7x2_platform_data sc16is7x2_SERIALPORT3_data = {
     .uartclk = 1843200,
     .uart_base = 0,
@@ -489,7 +490,7 @@ static int __init lpc313x_sc16is7x2_register(void)
         .platform_data          = &sc16is7x2_SERIALPORT3_data,
         .bus_num                = 0,
         .irq                    = gpio_to_irq(14),
-        .chip_select            = 11,
+        .chip_select            = 15,
         .max_speed_hz           = 187500,
         .mode                   = SPI_MODE_0,
         //.controller_data    = &sc16is7x2_mcspi_config,
@@ -503,7 +504,7 @@ static int __init lpc313x_sc16is7x2_register(void)
     return spi_register_board_info(&info, 1);
 }
 arch_initcall(lpc313x_sc16is7x2_register); 
-
+*/
 #if defined(CONFIG_MACH_EA3152)
 static struct i2c_board_info ea3152_i2c1_devices[] __initdata = {
 	{
