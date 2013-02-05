@@ -25,6 +25,8 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/time.h>
+#include <linux/clocksource.h>
+#include <linux/clockchips.h>
 
 #include <mach/hardware.h>
 #include <asm/io.h>
@@ -36,6 +38,157 @@
 #include <mach/board.h>
 //#include <mach/cgu.h>
 
+#define JG_DEBUG_LED		0
+#define JG_DEBUG_GPIO1_PIN	GPIO_GPIO11
+#define JG_DEBUG_GPIO2_PIN	GPIO_GPIO14
+
+
+#ifdef CONFIG_GENERIC_TIME
+static int lpc313x_clkevt_next_event(unsigned long delta,
+    struct clock_event_device *dev)
+{
+	TIMER_CONTROL(TIMER1_PHYS) = 0;
+	TIMER_LOAD(TIMER1_PHYS) = delta;
+	TIMER_CONTROL(TIMER1_PHYS) = (TM_CTRL_ENABLE | TM_CTRL_PERIODIC);
+
+	return 0;
+}
+
+static void lpc313x_clkevt_mode(enum clock_event_mode mode,
+    struct clock_event_device *dev)
+{
+	switch (mode) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		TIMER_CONTROL(TIMER1_PHYS) = 0;
+		TIMER_LOAD(TIMER1_PHYS) = CLOCK_TICK_RATE / HZ;
+		TIMER_CONTROL(TIMER1_PHYS) = (TM_CTRL_ENABLE | TM_CTRL_PERIODIC);
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		TIMER_CONTROL(TIMER1_PHYS) &= ~TM_CTRL_ENABLE;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/*
+		 * Disable the timer. When using oneshot, we must also
+		 * disable the timer to wait for the first call to
+		 * set_next_event().
+		 */
+		TIMER_CONTROL(TIMER1_PHYS) = 0;
+		break;
+
+	case CLOCK_EVT_MODE_RESUME:
+		TIMER_CONTROL(TIMER1_PHYS) |= TM_CTRL_ENABLE;
+		break;
+	}
+}
+
+
+static struct clock_event_device lpc313x_clkevt = {
+	    .name		= "lpc313x event timer",
+        .features       = CLOCK_EVT_FEAT_ONESHOT | CLOCK_EVT_FEAT_PERIODIC,
+        .shift          = 32,
+	    .rating		= 300,	
+        .set_next_event = lpc313x_clkevt_next_event,
+        .set_mode       = lpc313x_clkevt_mode,
+};
+
+static irqreturn_t lpc313x_timer_interrupt(int irq, void *dev_id)
+{
+	struct clock_event_device *evt = &lpc313x_clkevt;
+
+	/* clear timer interrupt */
+	TIMER_CLEAR(TIMER1_PHYS) = 0;
+
+	evt->event_handler(evt);
+
+	return IRQ_HANDLED;
+}
+
+static struct irqaction lpc313x_timer_irq = {
+	.name		= "lpc313x_timer_irq",
+	.flags		= IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
+	.handler	= lpc313x_timer_interrupt,
+};
+
+
+static cycle_t lpc313x_clksrc_read(struct clocksource *cs)
+{
+	BUG_ON((TIMER_CONTROL(TIMER0_PHYS) & TM_CTRL_ENABLE) == 0);
+	return ~TIMER_VALUE(TIMER0_PHYS);
+}
+
+static struct clocksource lpc313x_clksrc = {
+	.name		= "lpc313x_clksrc",
+	.rating		= 300,
+	.read		= lpc313x_clksrc_read,
+        .shift          = 20,
+	.mask		= CLOCKSOURCE_MASK(32),
+	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
+};
+
+/*
+ * The clock management driver isn't initialized at this point, so the
+ * clocks need to be enabled here manually and then tagged as used in
+ * the clock driver initialization
+ */
+static void __init lpc313x_timer_init(void)
+{
+
+	
+	/* configure timers to select no fractional divider, but
+	 * direct AHB_APB1_BASE clock */
+	CGU_SB->base_fdc[CGU_SB_BASE2_FDIV_LOW_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER0_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER1_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER2_PCLK_ID] = 0;
+	CGU_SB->clk_esr[CGU_SB_TIMER3_PCLK_ID] = 0;
+	/* Enable timer clock */
+	/* Attention: cgu_init() will later go through all clocks and 
+	 * enable/disable based on its own information! */
+	cgu_clk_en_dis(CGU_SB_TIMER0_PCLK_ID, 1);
+	cgu_clk_en_dis(CGU_SB_TIMER1_PCLK_ID, 1);
+	cgu_clk_en_dis(CGU_SB_TIMER2_PCLK_ID, 0);
+	cgu_clk_en_dis(CGU_SB_TIMER3_PCLK_ID, 0);
+
+
+	/* set up free running timer 0 */
+	TIMER_CONTROL(TIMER0_PHYS) = 0;
+	TIMER_LOAD(TIMER0_PHYS) = 0;
+	TIMER_CLEAR(TIMER0_PHYS) = 0;
+	TIMER_CONTROL(TIMER0_PHYS) = TM_CTRL_ENABLE;
+
+
+	/* set up event timer 1 */
+	TIMER_CONTROL(TIMER1_PHYS) = 0;
+	TIMER_LOAD(TIMER1_PHYS) = 0;
+	TIMER_CLEAR(TIMER1_PHYS) = 0;
+	TIMER_CONTROL(TIMER1_PHYS) = TM_CTRL_PERIODIC;
+	setup_irq (IRQ_TIMER1, &lpc313x_timer_irq);
+	
+
+	/* Setup the clockevent structure. */
+	lpc313x_clkevt.mult = div_sc(CLOCK_TICK_RATE, NSEC_PER_SEC,
+		lpc313x_clkevt.shift);
+	lpc313x_clkevt.max_delta_ns = clockevent_delta2ns(-1,
+		&lpc313x_clkevt);
+	lpc313x_clkevt.min_delta_ns = clockevent_delta2ns(1,
+		&lpc313x_clkevt) + 1;
+	lpc313x_clkevt.cpumask = cpumask_of(0);
+	clockevents_register_device(&lpc313x_clkevt);
+
+	lpc313x_clksrc.mult = clocksource_hz2mult(CLOCK_TICK_RATE, 
+		lpc313x_clksrc.shift);
+	clocksource_register(&lpc313x_clksrc);
+}
+
+struct sys_timer lpc313x_timer = {
+	.init		= lpc313x_timer_init,
+};
+
+
+#else
 
 static irqreturn_t lpc313x_timer_interrupt(int irq, void *dev_id)
 {
@@ -43,6 +196,7 @@ static irqreturn_t lpc313x_timer_interrupt(int irq, void *dev_id)
 	timer_tick();
 	return IRQ_HANDLED;
 }
+
 
 static struct irqaction lpc313x_timer_irq = {
 	.name		= "LPC313x Timer Tick",
@@ -94,3 +248,6 @@ struct sys_timer lpc313x_timer = {
 	.suspend = lpc313x_timer_suspend,
 	.resume = lpc313x_timer_resume,
 };
+
+#endif
+

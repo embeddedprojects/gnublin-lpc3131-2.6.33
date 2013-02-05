@@ -38,12 +38,12 @@ endmenu
 
 
 
-#menu "Special settings"
-#	depends on ARCH_LPC313X
+menu "Special settings"
+	depends on ARCH_LPC313X
 
 
-#config DUAL_MODE
-#	bool "Add a second SPI device"
+config CPU_LED
+	bool "Use Red LED (GPIO_GPIO3) as CPU idle LED"
 #	help
 #	   If you want to connect 2 SPI devices to GNUBLIN, then its required 
 #	   to have 2 chip selects.
@@ -58,7 +58,7 @@ endmenu
 #	   This option will set the CS_OUT0 Pin to GPIO11. This is usefull for the
 #	   standart GNUBLIN edition, if you don't want to use the little tespoint.
 #
-#endmenu
+endmenu
 
 #menu "GNUBLIN IRQ INITIALISATION(not supportet yet!)"
 #	depends on ARCH_LPC313X

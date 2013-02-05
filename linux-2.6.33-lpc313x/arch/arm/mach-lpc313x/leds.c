@@ -60,26 +60,26 @@ static void val3153_leds_event(led_event_t evt)
 
 	switch(evt) {
 	case led_start:		/* System startup */
-		val3153_led_on(GPIO_GPIO0);
+		val3153_led_on(GPIO_GPIO3);
 		break;
 
 	case led_stop:		/* System stop / suspend */
-		val3153_led_off(GPIO_GPIO0);
+		val3153_led_off(GPIO_GPIO3);
 		break;
 
 #ifdef CONFIG_LEDS_TIMER
 	case led_timer:		/* Every 50 timer ticks */
-		val3153_led_toggle(GPIO_GPIO2);
+		val3153_led_toggle(GPIO_GPIO3);
 		break;
 #endif
 
 #ifdef CONFIG_LEDS_CPU
 	case led_idle_start:	/* Entering idle state */
-		val3153_led_off(GPIO_GPIO0);
+		val3153_led_on(GPIO_GPIO3);
 		break;
 
 	case led_idle_end:	/* Exit idle state */
-		val3153_led_on(GPIO_GPIO0);
+		val3153_led_off(GPIO_GPIO3);
 		break;
 #endif
 
@@ -93,6 +93,9 @@ static void val3153_leds_event(led_event_t evt)
 
 int __init leds_init(void)
 {
+	GPIO_M1_SET((unsigned)IOCONF_GPIO) = (1<<GPIO_GPIO3);
+    GPIO_M0_RESET((unsigned)IOCONF_GPIO) = (1<<GPIO_GPIO3);
+
 	leds_event = val3153_leds_event;
 
 	leds_event(led_start);
