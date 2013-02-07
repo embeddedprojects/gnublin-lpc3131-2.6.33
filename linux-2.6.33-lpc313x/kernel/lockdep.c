@@ -805,6 +805,12 @@ out_unlock_set:
 	return class;
 }
 
+#if defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_TRACE_IRQFLAGS)
+
+/* CHECKME */
+
+#endif /* CONFIG_PROVE_LOCKING || CONFIG_TRACE_IRQFLAGS */
+
 #ifdef CONFIG_PROVE_LOCKING
 /*
  * Allocate a lockdep entry. (assumes the graph_lock held, returns
@@ -1337,6 +1343,7 @@ print_shortest_lock_dependencies(struct lock_list *leaf,
 	return;
 }
 
+#ifdef CONFIG_PROVE_LOCKING
 static int
 print_bad_irq_dependency(struct task_struct *curr,
 			 struct lock_list *prev_root,
@@ -1407,6 +1414,7 @@ print_bad_irq_dependency(struct task_struct *curr,
 
 	return 0;
 }
+#endif /* CONFIG_PROVE_LOCKING */
 
 static int
 check_usage(struct task_struct *curr, struct held_lock *prev,
@@ -2716,6 +2724,8 @@ void lockdep_init_map(struct lockdep_map *lock, const char *name,
 }
 EXPORT_SYMBOL_GPL(lockdep_init_map);
 
+struct lock_class_key __lockdep_no_validate__;
+
 /*
  * This gets called for every mutex_lock*()/spin_lock*() operation.
  * We maintain the dependency maps and validate the locking attempt:
@@ -2749,6 +2759,9 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
 		dump_stack();
 		return 0;
 	}
+
+	if (lock->key == &__lockdep_no_validate__)
+		check = 1;
 
 	if (!subclass)
 		class = lock->class_cache;
@@ -3594,6 +3607,9 @@ void lockdep_init(void)
 
 	for (i = 0; i < CHAINHASH_SIZE; i++)
 		INIT_LIST_HEAD(chainhash_table + i);
+
+	/* Hack alert ! */
+	lockdep_set_novalidate_class(&kernel_sem);
 
 	lockdep_initialized = 1;
 }

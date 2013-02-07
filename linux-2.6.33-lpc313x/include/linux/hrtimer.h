@@ -107,6 +107,8 @@ struct hrtimer {
 	enum hrtimer_restart		(*function)(struct hrtimer *);
 	struct hrtimer_clock_base	*base;
 	unsigned long			state;
+	struct list_head		cb_entry;
+	int				irqsafe;
 #ifdef CONFIG_TIMER_STATS
 	int				start_pid;
 	void				*start_site;
@@ -142,6 +144,7 @@ struct hrtimer_clock_base {
 	struct hrtimer_cpu_base	*cpu_base;
 	clockid_t		index;
 	struct rb_root		active;
+	struct list_head	expired;
 	struct rb_node		*first;
 	ktime_t			resolution;
 	ktime_t			(*get_time)(void);
@@ -179,6 +182,9 @@ struct hrtimer_cpu_base {
 	unsigned long			nr_retries;
 	unsigned long			nr_hangs;
 	ktime_t				max_hang_time;
+#endif
+#ifdef CONFIG_PREEMPT_SOFTIRQS
+	wait_queue_head_t		wait;
 #endif
 };
 
@@ -366,6 +372,13 @@ static inline int hrtimer_restart(struct hrtimer *timer)
 {
 	return hrtimer_start_expires(timer, HRTIMER_MODE_ABS);
 }
+
+/* Softirq preemption could deadlock timer removal */
+#ifdef CONFIG_PREEMPT_SOFTIRQS
+  extern void hrtimer_wait_for_timer(const struct hrtimer *timer);
+#else
+# define hrtimer_wait_for_timer(timer)	do { cpu_relax(); } while (0)
+#endif
 
 /* Query timers: */
 extern ktime_t hrtimer_get_remaining(const struct hrtimer *timer);

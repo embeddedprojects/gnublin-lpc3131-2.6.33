@@ -6,6 +6,7 @@
  */
 #include <linux/mm.h>
 #include <linux/fs.h>
+#include <linux/atomic.h>
 #include <linux/list.h>
 #include <linux/highmem.h>
 #include <linux/compiler.h>
