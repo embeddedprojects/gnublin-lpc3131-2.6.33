@@ -38,10 +38,7 @@
 #include <mach/board.h>
 //#include <mach/cgu.h>
 
-#define JG_DEBUG_LED		0
-#define JG_DEBUG_GPIO1_PIN	GPIO_GPIO11
-#define JG_DEBUG_GPIO2_PIN	GPIO_GPIO14
-
+#include <linux/cnt32_to_63.h>
 
 #ifdef CONFIG_GENERIC_TIME
 static int lpc313x_clkevt_next_event(unsigned long delta,
@@ -53,6 +50,16 @@ static int lpc313x_clkevt_next_event(unsigned long delta,
 
 	return 0;
 }
+
+
+unsigned long long sched_clock(void)
+{
+	unsigned long long t;
+
+		t = cnt32_to_63(TIMER_VALUE(TIMER0_PHYS));
+		return t;
+}
+
 
 static void lpc313x_clkevt_mode(enum clock_event_mode mode,
     struct clock_event_device *dev)
@@ -177,7 +184,8 @@ static void __init lpc313x_timer_init(void)
 		&lpc313x_clkevt) + 1;
 	lpc313x_clkevt.cpumask = cpumask_of(0);
 	clockevents_register_device(&lpc313x_clkevt);
-
+	
+	/* Setup clocksource structure */
 	lpc313x_clksrc.mult = clocksource_hz2mult(CLOCK_TICK_RATE, 
 		lpc313x_clksrc.shift);
 	clocksource_register(&lpc313x_clksrc);

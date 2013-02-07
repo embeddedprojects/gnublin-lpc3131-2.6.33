@@ -531,9 +531,9 @@ static void __init ea313x_init(void)
 	//i2c_register_board_info(1, ea313x_i2c_devices, ARRAY_SIZE(ea313x_i2c_devices));
 
 
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x20); /* GPIO11 */
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x200); /* GPIO15 */
-	GPIO_OUT_HIGH(IOCONF_GPIO,0x2000); /* GPIO19 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,(1 << GPIO_GPIO11)); /* GPIO11 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,(1 << GPIO_GPIO15)); /* GPIO15 */
+	GPIO_OUT_HIGH(IOCONF_GPIO,(1 << GPIO_GPIO19)); /* GPIO19 */
 
 
 	
