@@ -52,15 +52,6 @@ static int lpc313x_clkevt_next_event(unsigned long delta,
 }
 
 
-unsigned long long sched_clock(void)
-{
-	unsigned long long t;
-
-		t = cnt32_to_63(TIMER_VALUE(TIMER0_PHYS));
-		return t;
-}
-
-
 static void lpc313x_clkevt_mode(enum clock_event_mode mode,
     struct clock_event_device *dev)
 {
@@ -134,6 +125,35 @@ static struct clocksource lpc313x_clksrc = {
 	.mask		= CLOCKSOURCE_MASK(32),
 	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
 };
+
+
+
+
+/* sched_clock implementation.
+ * This is needed for setting the scheduler clock
+ *
+ */
+
+unsigned long long notrace sched_clock(void)
+{
+	unsigned long long t;
+	static int a=0;
+		a++;
+
+		t = TIMER_VALUE(TIMER0_PHYS);
+		if (a >= 20000) {
+		printk("Sched_clock called!\n");
+		printk("Sched_clock VAL=%x\n",t);
+		a=0;
+		
+		t = clocksource_cyc2ns(lpc313x_clksrc.read(&lpc313x_clksrc),
+				  lpc313x_clksrc.mult,
+				  lpc313x_clksrc.shift);
+		printk("clocksource_cyc2ns=%x\n",t);
+		}
+		return t;
+}
+
 
 /*
  * The clock management driver isn't initialized at this point, so the
