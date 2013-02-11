@@ -36,11 +36,15 @@
 #include <asm/mach/time.h>
 #include <mach/gpio.h>
 #include <mach/board.h>
-//#include <mach/cgu.h>
 
-#include <linux/cnt32_to_63.h>
+
+
+#include <linux/cnt32_to_63.h>		/* virtual 64-Bit timer */
 
 #ifdef CONFIG_GENERIC_TIME
+
+u32 glob_mult;
+
 static int lpc313x_clkevt_next_event(unsigned long delta,
     struct clock_event_device *dev)
 {
@@ -52,13 +56,6 @@ static int lpc313x_clkevt_next_event(unsigned long delta,
 }
 
 
-unsigned long long sched_clock(void)
-{
-	unsigned long long t;
-
-		t = cnt32_to_63(TIMER_VALUE(TIMER0_PHYS));
-		return t;
-}
 
 
 static void lpc313x_clkevt_mode(enum clock_event_mode mode,
@@ -101,6 +98,69 @@ static struct clock_event_device lpc313x_clkevt = {
         .set_mode       = lpc313x_clkevt_mode,
 };
 
+
+
+	static cycle_t lpc313x_clksrc_read(struct clocksource *cs)
+	{
+		BUG_ON((TIMER_CONTROL(TIMER0_PHYS) & TM_CTRL_ENABLE) == 0);
+		return ~TIMER_VALUE(TIMER0_PHYS);
+	}
+
+	static struct clocksource lpc313x_clksrc = {
+		.name		= "lpc313x_clksrc",
+		.rating		= 300,
+		.read		= lpc313x_clksrc_read,
+        .shift          = 20,
+	.mask		= CLOCKSOURCE_MASK(32),
+	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
+};
+
+
+
+
+/* scheduler clock 
+ */
+unsigned long long sched_clock(void)
+{
+        unsigned long long t,v;
+	u32 timer_val;
+            
+		timer_val=TIMER_VALUE(TIMER0_PHYS);
+		timer_val = ~timer_val;
+
+		/* Need to use a virtual 64-Bit counter because
+		 * the 32-Bit lpc31x counter wraps after short time.
+		 * We need a straight monotonic timeline! 
+         */
+        v = cnt32_to_63(timer_val);
+
+		/* 63th Bit is garbage */
+		v &= ~(1 << 63);     
+
+        t = clocksource_cyc2ns(v, glob_mult, lpc313x_clksrc.shift);
+
+		return t;
+}
+
+
+/* Half timer period interrupt
+ * We need to make sure that function cnt32_to_63() has to
+ * be called at least 2 times before the timer wraps. --BN
+ */
+static irqreturn_t lpc313x_period_interrupt(int irq, void *dev_id)
+{
+	
+	/* clear timer interrupt */
+	TIMER_CLEAR(TIMER3_PHYS) = 0;
+	
+	/* Call cnt32_to_63 within sched_clock() */	
+	sched_clock();
+	
+	return IRQ_HANDLED;
+}
+
+
+
 static irqreturn_t lpc313x_timer_interrupt(int irq, void *dev_id)
 {
 	struct clock_event_device *evt = &lpc313x_clkevt;
@@ -113,27 +173,20 @@ static irqreturn_t lpc313x_timer_interrupt(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+
+static struct irqaction lpc313x_period_irq = {
+	.name		= "lpc313x_period_irq",
+	.flags		= IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
+	.handler	= lpc313x_period_interrupt,
+};
+
+
 static struct irqaction lpc313x_timer_irq = {
 	.name		= "lpc313x_timer_irq",
 	.flags		= IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
 	.handler	= lpc313x_timer_interrupt,
 };
 
-
-static cycle_t lpc313x_clksrc_read(struct clocksource *cs)
-{
-	BUG_ON((TIMER_CONTROL(TIMER0_PHYS) & TM_CTRL_ENABLE) == 0);
-	return ~TIMER_VALUE(TIMER0_PHYS);
-}
-
-static struct clocksource lpc313x_clksrc = {
-	.name		= "lpc313x_clksrc",
-	.rating		= 300,
-	.read		= lpc313x_clksrc_read,
-        .shift          = 20,
-	.mask		= CLOCKSOURCE_MASK(32),
-	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
-};
 
 /*
  * The clock management driver isn't initialized at this point, so the
@@ -157,7 +210,7 @@ static void __init lpc313x_timer_init(void)
 	cgu_clk_en_dis(CGU_SB_TIMER0_PCLK_ID, 1);
 	cgu_clk_en_dis(CGU_SB_TIMER1_PCLK_ID, 1);
 	cgu_clk_en_dis(CGU_SB_TIMER2_PCLK_ID, 0);
-	cgu_clk_en_dis(CGU_SB_TIMER3_PCLK_ID, 0);
+	cgu_clk_en_dis(CGU_SB_TIMER3_PCLK_ID, 1);
 
 
 	/* set up free running timer 0 */
@@ -174,6 +227,12 @@ static void __init lpc313x_timer_init(void)
 	TIMER_CONTROL(TIMER1_PHYS) = TM_CTRL_PERIODIC;
 	setup_irq (IRQ_TIMER1, &lpc313x_timer_irq);
 	
+	/* set up half wrap period timer */
+	TIMER_CONTROL(TIMER3_PHYS) = 0;
+	TIMER_CLEAR(TIMER3_PHYS) = 0;
+	TIMER_LOAD(TIMER3_PHYS) = 0x40000000;
+	TIMER_CONTROL(TIMER3_PHYS) = TM_CTRL_PERIODIC | TM_CTRL_ENABLE;
+	setup_irq (IRQ_TIMER3, &lpc313x_period_irq);
 
 	/* Setup the clockevent structure. */
 	lpc313x_clkevt.mult = div_sc(CLOCK_TICK_RATE, NSEC_PER_SEC,
@@ -188,7 +247,9 @@ static void __init lpc313x_timer_init(void)
 	/* Setup clocksource structure */
 	lpc313x_clksrc.mult = clocksource_hz2mult(CLOCK_TICK_RATE, 
 		lpc313x_clksrc.shift);
+	glob_mult = lpc313x_clksrc.mult;
 	clocksource_register(&lpc313x_clksrc);
+	printk("lpc313x_clksrc.mult=%d\n",glob_mult);
 }
 
 struct sys_timer lpc313x_timer = {
