@@ -30,7 +30,7 @@
 
 // device
 #define DEVICE_NAME           "lpc313x_pwm"
-#define DEVICE_LEN            4
+#define DEVICE_LEN            5
 
 
 static int device_open(struct inode *, struct file *);

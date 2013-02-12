@@ -32,6 +32,7 @@
 #include <linux/cdev.h>       /* Support for /sys/class */
 #include <linux/device.h>
 
+
 #include "lpc313x_pwm.h"
 
 static int pwm_value = 0;
@@ -64,15 +65,45 @@ static int device_open(struct inode *inode, struct file *file) {
 static ssize_t device_write(struct file *filp, const char *buff, size_t len, loff_t * off) {
  char in_buffer[DEVICE_LEN]; 
  
- len = (len > DEVICE_LEN ? DEVICE_LEN : len);
  
- if(copy_from_user(in_buffer, buff, len)) return -EINVAL;
-
- pwm_value = (in_buffer[0] + (in_buffer[1] << 8));
- PWM_TMR_REG = pwm_value & PWM_MR_MASK;
+  len = (len > DEVICE_LEN ? DEVICE_LEN : len);
  
- printk("[lpc313x_pwm] pwm to %d (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
+  if(copy_from_user(in_buffer, buff, len)) return -EINVAL;
 
+//Check if a value or a command is set. commands are: clk1 for normal clk; clk2 for clk/2; clk3 for clk/4; clk4 for clk/8;
+if (strncmp (in_buffer, "clk1", 4) == 0)
+  {
+    PWM_CNTL_REG = PWM_CLKDIV_1;
+    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 );
+  } 
+  
+else if (strncmp (in_buffer, "clk2", 4) == 0)
+  {
+    PWM_CNTL_REG = PWM_CLKDIV_2;
+    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 2);
+  }
+
+else if (strncmp (in_buffer, "clk3", 4) == 0)
+  {
+    PWM_CNTL_REG = PWM_CLKDIV_4;
+    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 4);
+  }
+
+else if (strncmp (in_buffer, "clk4", 4) == 0)    
+  {
+    PWM_CNTL_REG = PWM_CLKDIV_8;
+    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 8);
+  }
+
+else
+  {  
+  pwm_value = (in_buffer[2] + (in_buffer[1] << 4) + (in_buffer[0] << 8));
+  PWM_TMR_REG = pwm_value & PWM_MR_MASK;
+ 
+  printk("[lpc313x_pwm] pwm to %d (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
+
+  }
+  
  return len;
 }
 
@@ -82,9 +113,10 @@ static ssize_t device_read(struct file *filp, char *buffer, size_t length, loff_
   *offset += 2;
  } else return 0;
  
- put_user(pwm_value & 0xff, buffer++);
- put_user((pwm_value >> 8) & 0xff, buffer++);
- return 2;
+ put_user(pwm_value & 0xfff, buffer++);
+ put_user((pwm_value >> 4) & 0xfff, buffer++);
+ put_user((pwm_value >> 8) & 0xfff, buffer++);
+ return 3;
 }
 
 static int device_release(struct inode *inode, struct file *file) {
