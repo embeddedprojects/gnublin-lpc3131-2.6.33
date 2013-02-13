@@ -37,7 +37,7 @@
 
 static int pwm_value = 0;
 static int dev_open = 0; 
-
+static unsigned long val;
 static dev_t driv_number;
 static struct cdev *driv_object;
 static struct class *driv_class;
@@ -65,44 +65,49 @@ static int device_open(struct inode *inode, struct file *file) {
 static ssize_t device_write(struct file *filp, const char *buff, size_t len, loff_t * off) {
  char in_buffer[DEVICE_LEN]; 
  
- 
-  len = (len > DEVICE_LEN ? DEVICE_LEN : len);
- 
-  if(copy_from_user(in_buffer, buff, len)) return -EINVAL;
+	len = (len > DEVICE_LEN ? DEVICE_LEN : len);
+	if(copy_from_user(in_buffer, buff, len)) return -EINVAL;
 
-//Check if a value or a command is set. commands are: clk1 for normal clk; clk2 for clk/2; clk3 for clk/4; clk4 for clk/8;
-if (strncmp (in_buffer, "clk1", 4) == 0)
-  {
-    PWM_CNTL_REG = PWM_CLKDIV_1;
-    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 );
-  } 
-  
-else if (strncmp (in_buffer, "clk2", 4) == 0)
-  {
-    PWM_CNTL_REG = PWM_CLKDIV_2;
-    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 2);
-  }
+	/* Check if a value or a command is set. commands are:
+	 * clk1 for clk/1 
+	 * clk2 for clk/2
+	 * clk3 for clk/4 
+	 * clk4 for clk/8
+     */
+	if (strncmp (in_buffer, "clk1", 4) == 0)
+	{
+	    PWM_CNTL_REG = PWM_CLKDIV_1;
+	    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 );
+	} 
+	else if (strncmp (in_buffer, "clk2", 4) == 0)
+  	{
+    	PWM_CNTL_REG = PWM_CLKDIV_2;
+    	printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 2);
+  	}
 
-else if (strncmp (in_buffer, "clk3", 4) == 0)
-  {
-    PWM_CNTL_REG = PWM_CLKDIV_4;
-    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 4);
-  }
+	else if (strncmp (in_buffer, "clk3", 4) == 0)
+  	{
+    	PWM_CNTL_REG = PWM_CLKDIV_4;
+    	printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 4);
+  	}
 
-else if (strncmp (in_buffer, "clk4", 4) == 0)    
-  {
-    PWM_CNTL_REG = PWM_CLKDIV_8;
-    printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 8);
-  }
+	else if (strncmp (in_buffer, "clk4", 4) == 0)    
+  	{
+    	PWM_CNTL_REG = PWM_CLKDIV_8;
+   	 printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096 / 8);
+  	}
 
-else
-  {  
-  pwm_value = (in_buffer[2] + (in_buffer[1] << 4) + (in_buffer[0] << 8));
-  PWM_TMR_REG = pwm_value & PWM_MR_MASK;
- 
-  printk("[lpc313x_pwm] pwm to %d (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
-
-  }
+	else
+  	{  
+  		pwm_value = (in_buffer[2] + (in_buffer[1] << 4) + (in_buffer[0] << 8));
+		pwm_value = simple_strtol(in_buffer,NULL,16);
+  		PWM_TMR_REG = pwm_value & PWM_MR_MASK;
+ 	
+  		printk("[lpc313x_pwm] pwm to %x (%d%%)\n", pwm_value, pwm_value * 100 / 4095);
+		printk("buff[0]=%c\n",in_buffer[0]);
+		printk("buff[1]=%c\n",in_buffer[1]);
+		printk("buff[2]=%c\n",in_buffer[2]);
+  	}
   
  return len;
 }
@@ -128,13 +133,17 @@ static int device_release(struct inode *inode, struct file *file) {
 
 
 int __init init_pwm(void) {
- printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096);
- 
+
+
  /* enable clock for PWM */
  cgu_clk_en_dis(CGU_SB_PWM_PCLK_ID, 1);
  cgu_clk_en_dis(CGU_SB_PWM_PCLK_REGS_ID, 1);
  cgu_clk_en_dis(CGU_SB_PWM_CLK_ID, 1);
  
+
+printk("[lpc313x_pwm] pwm frequency: %u Hz\n", cgu_get_clk_freq(CGU_SB_PWM_CLK_ID) / 4096);
+
+
  /* reset to default */
  PWM_TMR_REG = PWM_TMR_DEFAULT;
  PWM_CNTL_REG = PWM_CNTL_DEFAULT;
