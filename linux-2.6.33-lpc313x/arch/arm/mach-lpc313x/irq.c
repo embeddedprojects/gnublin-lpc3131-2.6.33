@@ -280,6 +280,10 @@ void __init lpc313x_init_irq(void)
 		set_irq_flags(irq, IRQF_VALID);
 	}
 
+	/* Initialize all remaining interrupts without installing a handler
+     * The handler will be installed for special interrupts wich have to initialized at bootup in the next loop !
+     * This loop only registers the irq_chip
+     */ 
 	for(irq = NR_IRQ_CPU; irq <  NR_IRQS ; irq++) {
 		bank = EVT_GET_BANK(irq_to_evt(irq));	
 		bit_pos = irq_to_evt(irq) & 0x1F ;

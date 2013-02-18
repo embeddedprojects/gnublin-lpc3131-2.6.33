@@ -68,6 +68,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/freezer.h>
 #include <linux/interrupt.h>
+#include <linux/irq.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -712,7 +713,9 @@ static int mcp251x_open(struct net_device *net)
 	priv->tx_len = 0;
 
 	ret = request_irq(spi->irq, mcp251x_can_isr,
-			  IRQF_TRIGGER_FALLING, DEVICE_NAME, net);
+			  IRQ_TYPE_EDGE_FALLING, DEVICE_NAME, net);
+
+printk("requesting interrupt %d\n",spi->)
 	if (ret) {
 		dev_err(&spi->dev, "failed to acquire irq %d\n", spi->irq);
 		if (pdata->transceiver_enable)
@@ -1246,7 +1249,7 @@ static int __init mcp251x_can_init(void)
 
 		} else {
 
-		spi_device->max_speed_hz = 1000000;
+		spi_vice->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
 		spi_device->irq = irq_pin;
