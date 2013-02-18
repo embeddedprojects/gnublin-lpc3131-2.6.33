@@ -47,6 +47,44 @@
 #define IOC_GPIO74	0x02    /* GPIO 7:4 unset: as IO, set: as modem pins */
 #define IOC_IOLATCH	0x01    /* Unset: input unlatched, set: input latched */
 
+struct spi_device *glob_dev;
+
+/* Defining struct for dynamic irq and spi_cs allocation */
+static struct sc16is7x2_platform_data sc16is7x2_SERIALPORT3_data = {
+    .uartclk = 1843200,
+    .uart_base = 0,
+    .gpio_base = 178,
+    .label = NULL,
+    .names = NULL,
+};
+
+/*
+static int __init lpc313x_sc16is7x2_register(void)
+{
+    struct spi_board_info info =
+    {
+            .modalias               = "sc16is7x2",
+        .platform_data          = &sc16is7x2_SERIALPORT3_data,
+        .bus_num                = 0,
+        .irq                    = gpio_to_irq(14),
+        .chip_select            = 15,
+        .max_speed_hz           = 187500,
+        .mode                   = SPI_MODE_0,
+    };
+}
+*/
+
+/* Additional Modul Parameters for dynamically allozation module load */
+static int irq_pin = 14; 
+module_param(irq_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(irq_pin, "Choose the Interrupt Pin. Enter a GPIO<x> id");
+
+static int cs_pin = 11;
+module_param(cs_pin, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin. Enter a GPIO<x> id" );
+/*END*/ 
+
+
 struct sc16is7x2_chip;
 
 /*
@@ -1046,6 +1084,96 @@ static struct spi_driver sc16is7x2_spi_driver = {
 /* Driver init function */
 static int __init sc16is7x2_init(void)
 {
+
+	struct spi_master *spi_master;
+	struct spi_device *spi_device;
+	struct device *pdev;
+	char buff[64];
+	int status2 = 0;
+
+ 
+
+	spi_master = spi_busnum_to_master(0);
+
+	if (!spi_master) {
+
+	printk(KERN_ALERT "spi_busnum_to_master(%d) returned NULL\n", 0);
+	printk(KERN_ALERT "Missing modprobe omap2_mcspi?\n");
+
+	return -1;
+
+}
+	spi_device = spi_alloc_device(spi_master);
+
+	if (!spi_device) {
+
+		put_device(&spi_master->dev);
+
+		printk(KERN_ALERT "spi_alloc_device() failed\n");
+
+	return -1;
+
+	}
+
+	/* specify a chip select line */
+	spi_device->chip_select = cs_pin;
+
+ 
+
+	/* Check whether this SPI bus.cs is already claimed */
+	snprintf(buff, sizeof(buff), "%s.%u",dev_name(&spi_device->master->dev),spi_device->chip_select);
+	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
+
+	if (pdev) {
+
+		/* We are not going to use this spi_device, so free it */
+		spi_dev_put(spi_device);
+
+		/*
+		* There is already a device configured for this bus.cs combination.
+		* It's okay if it's us. This happens if we previously loaded then
+		* unloaded our driver.
+		* If it is not us, we complain and fail.
+		*/
+
+		if (pdev->driver && pdev->driver->name &&
+			strcmp(DRIVER_NAME, pdev->driver->name)) {
+
+			printk(KERN_ALERT"Driver [%s] already registered for %s\n",pdev->driver->name, buff);
+			status2 = -1;
+		}
+
+		} else {
+
+		spi_device->max_speed_hz = 187500;
+		spi_device->mode = SPI_MODE_0;
+		spi_device->bits_per_word = 8;
+		spi_device->irq = gpio_to_irq(irq_pin);
+		spi_device->controller_state = NULL;
+		spi_device->controller_data = NULL;
+		spi_device->dev.platform_data = &sc16is7x2_SERIALPORT3_data,
+		strlcpy(spi_device->modalias, DRIVER_NAME, SPI_NAME_SIZE);
+
+
+
+		/* Add spi_device to a global pointer
+         * This global pointer can later be easily removed without searching for
+         * the spi_device data
+         */
+		glob_dev = spi_device;
+
+		status2 = spi_add_device(spi_device);
+
+		if (status2 < 0) {
+		spi_dev_put(spi_device);
+		printk(KERN_ALERT "spi_add_device() failed: %d\n",status2);
+
+		}
+
+	}
+ 	put_device(&spi_master->dev);
+
+	/* Everythin is ok -> register uart and spi driver */
 	int ret = uart_register_driver(&sc16is7x2_uart_driver);
 	if (ret)
 		return ret;
@@ -1056,6 +1184,18 @@ static int __init sc16is7x2_init(void)
 /* Driver exit function */
 static void __exit sc16is7x2_exit(void)
 {
+	struct spi_device *spi_device;
+
+	/* Connect the global spi_dev pointer --BN */
+	if(glob_dev != NULL) {	
+		spi_device = glob_dev;
+		spi_unregister_device(spi_device);
+		goto unregister_drv;	
+	} else {
+		goto unregister_drv;
+	}
+
+unregister_drv:
 	spi_unregister_driver(&sc16is7x2_spi_driver);
 	uart_unregister_driver(&sc16is7x2_uart_driver);
 }

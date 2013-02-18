@@ -76,6 +76,7 @@
 #include <linux/platform_device.h>
 #include <linux/spi/spi.h>
 #include <linux/uaccess.h>
+#include <mach/gpio.h>
 
 /* SPI interface instruction set */
 #define INSTRUCTION_WRITE	0x02
@@ -715,7 +716,7 @@ static int mcp251x_open(struct net_device *net)
 	ret = request_irq(spi->irq, mcp251x_can_isr,
 			  IRQ_TYPE_EDGE_FALLING, DEVICE_NAME, net);
 
-printk("requesting interrupt %d\n",spi->)
+
 	if (ret) {
 		dev_err(&spi->dev, "failed to acquire irq %d\n", spi->irq);
 		if (pdata->transceiver_enable)
@@ -1249,10 +1250,10 @@ static int __init mcp251x_can_init(void)
 
 		} else {
 
-		spi_vice->max_speed_hz = 1000000;
+		spi_device->max_speed_hz = 1000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
-		spi_device->irq = irq_pin;
+		spi_device->irq = gpio_to_irq(irq_pin);
 		spi_device->controller_state = NULL;
 		spi_device->controller_data = NULL;
 		spi_device->dev.platform_data = &mcp251x_info,
@@ -1281,23 +1282,20 @@ static int __init mcp251x_can_init(void)
 
 static void __exit mcp251x_can_exit(void)
 {
-	struct spi_master *spi_master;
+
 	struct spi_device *spi_device;
-	struct device *pdev;
-	char buff[64];
-	
 	
 
 	/* Connect the global spi_dev pointer --BN */
 	if(glob_dev != NULL) {	
 		spi_device = glob_dev;
 		spi_unregister_device(spi_device);
-		goto register_drv;	
+		goto unregister_drv;	
 	} else {
-		goto register_drv;
+		goto unregister_drv;
 	}
 
-register_drv:
+unregister_drv:
 
 	spi_unregister_driver(&mcp251x_can_driver);
 }
