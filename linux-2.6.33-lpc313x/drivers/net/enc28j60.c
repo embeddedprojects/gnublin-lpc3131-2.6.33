@@ -1696,6 +1696,8 @@ static int __init enc28j60_init(void)
 	struct device *pdev;
 	char buff[64];
 	int status = 0;
+	int irq_pin_id=-1,cs_pin_id=-1;
+		
 
  
 
@@ -1721,8 +1723,37 @@ static int __init enc28j60_init(void)
 
  	/* specify a chip select line */
 	spi_device->chip_select = cs_pin;
+	
+	/* set the default direction and value for cs_pin and irq */
+	/* get the correct GPIO<x> mapping
+	 * e.g. gpio11 == 5 (not 11)
+ 	 */
+
+	if (cs_pin == 1) {
+	cs_pin_id = 0 ;
+	} else if (cs_pin == 0) {
+	cs_pin_id = 1 ;
+	} else if ((cs_pin > 4) && (cs_pin <= 20)) {
+	cs_pin_id = cs_pin - 6 ;
+	}
+	
+	GPIO_OUT_HIGH(IOCONF_GPIO,(1 << cs_pin_id)); /* GPIO11 */
+	
+
+	if (irq_pin == 1) {
+	irq_pin_id = 0 ;
+	} else if (irq_pin == 0) {
+	irq_pin_id = 1 ;
+	} else if ((irq_pin > 4) && (irq_pin <= 20)) {
+	irq_pin_id = irq_pin - 6 ;
+	}
+	
+	/* Now set irq_pin default */
+	GPIO_IN(IOCONF_GPIO,(1 << irq_pin_id)); 
 
 
+	//printk("CS_PIN==%d, CS_PIN_ID==%d\n", cs_pin, cs_pin_id);
+	//printk("IRQ_PIN==%d, IRQ_PIN_ID==%d\n",irq_pin, irq_pin_id);
 	/* Check whether this SPI bus.cs is already claimed */
 	snprintf(buff, sizeof(buff), "%s.%u",dev_name(&spi_device->master->dev),spi_device->chip_select);
 	pdev = bus_find_device_by_name(spi_device->dev.bus, NULL, buff);
