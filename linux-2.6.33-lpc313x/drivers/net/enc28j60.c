@@ -1729,11 +1729,15 @@ static int __init enc28j60_init(void)
 	 * e.g. gpio11 == 5 (not 11)
  	 */
 
+	printk(KERN_ALERT "Chip Select %i\n",cs_pin);
 	if (cs_pin == 1) {
 	cs_pin_id = 0 ;
 	} else if (cs_pin == 0) {
 	cs_pin_id = 1 ;
-	} else if ((cs_pin > 4) && (cs_pin <= 20)) {
+	} else if ((cs_pin > 1) && (cs_pin <= 4)) {
+          cs_pin_id=cs_pin;
+        }
+	else if ((cs_pin >= 11) && (cs_pin <= 20)) {
 	cs_pin_id = cs_pin - 6 ;
 	}
 	
@@ -1744,7 +1748,9 @@ static int __init enc28j60_init(void)
 	irq_pin_id = 0 ;
 	} else if (irq_pin == 0) {
 	irq_pin_id = 1 ;
-	} else if ((irq_pin > 4) && (irq_pin <= 20)) {
+	} else if ((irq_pin > 1) && (irq_pin <= 4)) {
+	irq_pin_id = irq_pin;
+	} else if ((irq_pin >= 11) && (irq_pin <= 20)) {
 	irq_pin_id = irq_pin - 6 ;
 	}
 	
