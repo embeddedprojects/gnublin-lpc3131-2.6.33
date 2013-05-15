@@ -218,6 +218,7 @@ static void pca953x_setup_gpio(struct pca953x_chip *chip, int gpios)
 
 	gc = &chip->gpio_chip;
 
+	/* Set handler and functionality called by gpiolib ! */
 	gc->direction_input  = pca953x_gpio_direction_input;
 	gc->direction_output = pca953x_gpio_direction_output;
 	gc->get = pca953x_gpio_get_value;
@@ -227,6 +228,8 @@ static void pca953x_setup_gpio(struct pca953x_chip *chip, int gpios)
 	gc->base = chip->gpio_start;
 	gc->ngpio = gpios;
 	gc->label = chip->client->name;
+
+	/* Set device */
 	gc->dev = &chip->client->dev;
 	gc->owner = THIS_MODULE;
 	gc->names = chip->names;
