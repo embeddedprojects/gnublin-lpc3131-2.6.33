@@ -1264,38 +1264,39 @@ static void enc28j60_hw_tx(struct enc28j60_net *priv)
 	if (netif_msg_pktdata(priv))
 		dump_packet(__func__,
 			    priv->tx_skb->len, priv->tx_skb->data);
-	enc28j60_packet_write(priv, priv->tx_skb->len, priv->tx_skb->data);
+	if(priv->tx_skb!=NULL){
+		enc28j60_packet_write(priv, priv->tx_skb->len, priv->tx_skb->data);
+	#ifdef CONFIG_ENC28J60_WRITEVERIFY
+		/* readback and verify written data */
+		if (netif_msg_drv(priv)) {
+			int test_len, k;
+			u8 test_buf[64]; /* limit the test to the first 64 bytes */
+			int okflag;
 
-#ifdef CONFIG_ENC28J60_WRITEVERIFY
-	/* readback and verify written data */
-	if (netif_msg_drv(priv)) {
-		int test_len, k;
-		u8 test_buf[64]; /* limit the test to the first 64 bytes */
-		int okflag;
+			test_len = priv->tx_skb->len;
+			if (test_len > sizeof(test_buf))
+				test_len = sizeof(test_buf);
 
-		test_len = priv->tx_skb->len;
-		if (test_len > sizeof(test_buf))
-			test_len = sizeof(test_buf);
-
-		/* + 1 to skip control byte */
-		enc28j60_mem_read(priv, TXSTART_INIT + 1, test_len, test_buf);
-		okflag = 1;
-		for (k = 0; k < test_len; k++) {
-			if (priv->tx_skb->data[k] != test_buf[k]) {
-				printk(KERN_DEBUG DRV_NAME
-					 ": Error, %d location differ: "
-					 "0x%02x-0x%02x\n", k,
-					 priv->tx_skb->data[k], test_buf[k]);
-				okflag = 0;
+			/* + 1 to skip control byte */
+			enc28j60_mem_read(priv, TXSTART_INIT + 1, test_len, test_buf);
+			okflag = 1;
+			for (k = 0; k < test_len; k++) {
+				if (priv->tx_skb->data[k] != test_buf[k]) {
+					printk(KERN_DEBUG DRV_NAME
+						 ": Error, %d location differ: "
+						 "0x%02x-0x%02x\n", k,
+						 priv->tx_skb->data[k], test_buf[k]);
+					okflag = 0;
+				}
 			}
+			if (!okflag)
+				printk(KERN_DEBUG DRV_NAME ": Tx write buffer, "
+					"verify ERROR!\n");
 		}
-		if (!okflag)
-			printk(KERN_DEBUG DRV_NAME ": Tx write buffer, "
-				"verify ERROR!\n");
+	#endif
+		/* set TX request flag */
+		locked_reg_bfset(priv, ECON1, ECON1_TXRTS);
 	}
-#endif
-	/* set TX request flag */
-	locked_reg_bfset(priv, ECON1, ECON1_TXRTS);
 }
 
 static netdev_tx_t enc28j60_send_packet(struct sk_buff *skb,
@@ -1781,7 +1782,7 @@ static int __init enc28j60_init(void)
 		}
 
 		} else {
-		spi_device->max_speed_hz = 1000000;
+		spi_device->max_speed_hz = 20000000;
 		spi_device->mode = SPI_MODE_0;
 		spi_device->bits_per_word = 8;
 		spi_device->irq = gpio_to_irq(irq_pin);
