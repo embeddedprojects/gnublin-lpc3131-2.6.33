@@ -291,7 +291,13 @@ config SERIAL_SC16IS7X2
 	  Selecting this option will add support for SC16IS7x2 SPI UARTs.
 	  The GPIOs are exported via gpiolib interface.
 	  If unsure, say N.
-
+	  
+config SERIAL_SC16IS7X2_RS-485
+	bool "Enable RS-485 mode"
+	depends on SERIAL_SC16IS7X2
+	help
+	  Selecting this option will use the SC16IS7X2 chip in RS-485 Mode.
+	  This include to set the RTS pin automatically by the controller.
 
 config SERIAL_AMBA_PL010
 	tristate "ARM AMBA PL010 serial port support"

@@ -133,6 +133,14 @@
 
 #define UART_SCR	7	/* I/O: Scratch Register */
 
+#define UART_EFCR	15	/* Out: Extra Functions Controll Register */
+#define UART_EFCR_IRDA MODE	0x80 /* IrDA mode */
+#define UART_EFCR_RTSINVER	0x20 /* Invert RTS signal in RS-485 mode */
+#define UART_EFCR_RTSCON	0x10 /* Enable the transmitter to control the RTS pin */
+#define UART_EFCR_TXDISABLE	0x04 /* Disable transmitter */
+#define UART_EFCR_RXDISABLE	0x02 /* Disable receiver  */
+#define UART_EFCR_NINE_BITMODE	0x01 /* Enable 9-bit or Multidrop mode (RS-485)  */
+
 /*
  * DLAB=1
  */

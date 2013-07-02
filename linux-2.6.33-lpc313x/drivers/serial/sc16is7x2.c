@@ -108,6 +108,7 @@ struct sc16is7x2_channel {
 	u8		lcr;		/* cache for LCR register */
 	u8		mcr;		/* cache for MCR register */
 	u8		efr;		/* cache for EFR register */
+	u8		efcr;		/* cache for EFCR register*/
 #ifdef DEBUG
 	bool		handle_irq;
 #endif
@@ -333,6 +334,7 @@ static void sc16is7x2_handle_regs(struct sc16is7x2_chip *ts, unsigned ch)
 
         sc16is7x2_write(ts, UART_LCR, ch, 0xBF);  /* access EFR */
 	sc16is7x2_write(ts, UART_EFR, ch, chan->efr);
+	sc16is7x2_write(ts, UART_EFCR, ch, chan->efcr);
 	sc16is7x2_write(ts, UART_LCR, ch, chan->lcr);
 	sc16is7x2_write(ts, UART_FCR, ch, chan->fcr);
 	sc16is7x2_write(ts, UART_MCR, ch, chan->mcr);
@@ -661,6 +663,9 @@ sc16is7x2_set_termios(struct uart_port *port, struct ktermios *termios,
 		fcr |= UART_FCR_R_TRIG_01 | UART_FCR_T_TRIG_10;
 
 	chan->efr = UART_EFR_ECB;
+#ifdef SERIAL_SC16IS7X2_RS-485
+	chan->efcr = UART_EFCR_NINE_BITMODE | UART_EFCR_RTSCON;
+#endif
 	chan->mcr |= UART_MCR_RTS;
 	if (termios->c_cflag & CRTSCTS)
 		chan->efr |= UART_EFR_CTS | UART_EFR_RTS;
