@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Thu Feb 14 10:24:36 2013
+# Wed Jul  3 09:00:28 2013
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -881,6 +881,7 @@ CONFIG_RT2X00_LIB_LEDS=y
 # CONFIG_RT2X00_DEBUG is not set
 # CONFIG_WL12XX is not set
 # CONFIG_ZD1211RW is not set
+CONFIG_RTL8188EU=m
 
 #
 # Enable WiMAX (Networking options) to see the WiMAX drivers
@@ -999,6 +1000,7 @@ CONFIG_SERIAL_8250_RUNTIME_UARTS=1
 # Non-8250 serial port support
 #
 CONFIG_SERIAL_SC16IS7X2=m
+# CONFIG_SERIAL_SC16IS7X2_RS-485 is not set
 # CONFIG_SERIAL_MAX3100 is not set
 CONFIG_SERIAL_CORE=y
 CONFIG_SERIAL_CORE_CONSOLE=y
