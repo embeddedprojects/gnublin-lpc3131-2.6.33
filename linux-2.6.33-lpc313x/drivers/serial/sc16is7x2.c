@@ -51,12 +51,14 @@ struct spi_device *glob_dev;
 
 /* Defining struct for dynamic irq and spi_cs allocation */
 static struct sc16is7x2_platform_data sc16is7x2_SERIALPORT3_data = {
-    .uartclk = 1843200,
+    .uartclk = 3686400, //1843200,
     .uart_base = 0,
     .gpio_base = 178,
     .label = NULL,
     .names = NULL,
 };
+
+
 
 /*
 static int __init lpc313x_sc16is7x2_register(void)
@@ -83,6 +85,16 @@ static int cs_pin = 11;
 module_param(cs_pin, int, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(cs_pin, "Choose the Chip select Pin. Enter a GPIO<x> id" );
 /*END*/ 
+
+/* Additional Modul Parameters for RS-485 Mode */
+static int rs_485 = 0; 
+module_param(rs_485, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(rs_485, "1 for enable RS-485 Mode - 0 not");
+
+static int invert_rts = 0;
+module_param(invert_rts, int, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(invert_rts, "1 to invert RTS pins - 0 not" );
+/*END*/
 
 
 struct sc16is7x2_chip;
@@ -663,9 +675,13 @@ sc16is7x2_set_termios(struct uart_port *port, struct ktermios *termios,
 		fcr |= UART_FCR_R_TRIG_01 | UART_FCR_T_TRIG_10;
 
 	chan->efr = UART_EFR_ECB;
-#ifdef SERIAL_SC16IS7X2_RS-485
-	chan->efcr = UART_EFCR_NINE_BITMODE | UART_EFCR_RTSCON;
-#endif
+	if(rs_485==1){
+		if(invert_rts==1)
+			chan->efcr = UART_EFCR_NINE_BITMODE | UART_EFCR_RTSCON | UART_EFCR_RTSINVER;
+		else
+			chan->efcr = UART_EFCR_NINE_BITMODE | UART_EFCR_RTSCON;
+	}
+	
 	chan->mcr |= UART_MCR_RTS;
 	if (termios->c_cflag & CRTSCTS)
 		chan->efr |= UART_EFR_CTS | UART_EFR_RTS;
