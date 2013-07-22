@@ -42,7 +42,7 @@
 #include <linux/circ_buf.h>
 #include <linux/uaccess.h>
 #include <asm/byteorder.h>
-#include <linux/atomic.h>
+//#include <linux/atomic.h>
 #include <linux/semaphore.h>
 #include <linux/rtnetlink.h>
 
